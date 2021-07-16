@@ -1,0 +1,12 @@
+[submodule "warc2text"]
+	path = warc2text
+	url = https://github.com/bitextor/warc2text
+[submodule "bifixer"]
+	path = bifixer
+	url = https://github.com/bitextor/bifixer
+[submodule "biroamer"]
+	path = biroamer
+	url = https://github.com/bitextor/biroamer
+[submodule "preprocess"]
+	path = preprocess
+	url = https://github.com/kpu/preprocess
