@@ -1,0 +1,15 @@
+site_name: Bitextor
+site_url: null
+use_directory_urls: False
+site_description: Generates translation memories from multilingual websites.
+site_author: Bitextor Team
+
+repo_url: https://github.com/bitextor/bitextor/
+
+nav:
+    - Home: 'README.md'
+    - Installation: 'INSTALL.md'
+
+markdown_extensions:
+    - toc:
+        toc_depth: 6
