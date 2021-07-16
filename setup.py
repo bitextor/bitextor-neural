@@ -56,13 +56,8 @@ if __name__ == "__main__":
         package_data={
             "bitextor": [
                 "Snakefile",
-                "rules/*",
                 "utils/clean-corpus-n.perl",
                 "data/*",
-                "data/model/*",
-                "data/moses/ems/support/*",
-                "data/moses/tokenizer/*",
-                "data/moses/share/nonbreaking_prefixes/*",
             ]
         },
         entry_points={

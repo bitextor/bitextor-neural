@@ -12,7 +12,7 @@
 
 ## Installation
 
-Bitextor can be installed via Docker, Conda or built from source. See [INSTALL.md](INSTALL.md) for instructions.
+Bitextor can be installed built from source. See [INSTALL.md](INSTALL.md) for instructions.
 
 ## Usage
 
@@ -117,8 +117,6 @@ warcsFile: /home/user/warcs.gz
 
 ### Crawling
 
-Three crawlers are supported by Bitextor: [Heritrix](https://github.com/internetarchive/heritrix3), `wget` tool and [linguacrawl](https://github.com/transducens/linguacrawl/). The following are the variables that allow to choose one of them and to configure some aspects of the crawling.
-
 ```yaml
 crawler: wget
 
@@ -130,23 +128,11 @@ crawlerNumThreads: 1
 crawlerConnectionTimeout: 10
 ```
 
-* `crawler`: set which crawler is used (`heritrix`, `wget` or `linguacrawl`)
+* `crawler`: set which crawler is used (only `wget` is supported in this Bitextor variant)
 * `crawlerUserAgent`: [user agent](https://developers.whatismybrowser.com/useragents/explore/software_type_specific/crawler/) to be added to the header of the crawler when doing requests to a web server (identifies your crawler when downloading a website)
 * `crawlTimeLimit`: time (in seconds) for which a website can be crawled; for example: *3600s* for a crawl of an hour (`linguacrawl` needs only the quantity, without any suffix)
 * `crawlWait`: option that specifies the time that should be waited between the retrievals. It is intended to avoid a web-site to cut the connection of the crawler due too many connections in a low interval of time
-* `crawlFileTypes`: **wget-specific/linguacrawl-specific option** that allows to specify the files which we want to retrieve. Both `wget` and `linguacrawl` use the Content-Type in order to search a pattern which matches, so either "html" or "text/html" will retrieve those files with Content-Type "text/html". The [Content-Type header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) contains [MIME](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) values
-* `crawlSizeLimit`: **linguacrawl-specific option** that limits the size of the crawl, i.e. when this limit is reached the crawl ends
-* `crawlTLD`: **linguacrawl-specific option** that allows the crawler to jump to a different web domain as far as it is part of the same [top-level domain](https://en.wikipedia.org/wiki/Top-level_domain) (TLD); TLD can be specified as a list (e.g. ['es', 'fr'], ['ca', 'com', 'es'])
-* `crawlerNumThreads`: **linguacrawl-specific option** that allows to specify the number of threads to be be used by the crawler; by default this number is 1
-* `crawlerConnectionTimeout`: **linguacrawl-specific option** that allows to specify the connection timeout to a web server
-* `dumpCurrentCrawl`: **linguacrawl-specific option** that allows to visualize more information about what the crawler is doing, like a 'verbose' option
-* `resumePreviousCrawl`: **linguacrawl-specific option** that allows to resume the crawling, but is not trivial to use since Snakemake executes the workflow based on the files which are needed. This option might be used for those cases where the crawling was stopped at the same time that the workflow, or after removing those files which makes necessary the crawler to be executed again (this last option might be difficult to achieve)
-* `crawlCat`: **linguacrawl-specific option** that allows to merge all the downloaded WARCs in just one (`linguacrawl` generates one warc per domain/subdomain accordin to the documentation, which does not specify concretely which one). This option will improbe the number of rules of preprocessing to run, but will cause to lose important information like the source of the WARCs. Be aware that this option might be equally as dangerous if enabled in the case of a large crawling since the preprocessing of a very large WARC might even cost more resources (either time or memory) that the processing of thousands of little WARCs
-* `crawlCatMaxSize`: **linguacrawl-specific option** that allows to specify a max. size of the merged WARC. If this option is specified, multiple WARCs will be generated where the retrieved WARCs will be being merged, and new WARCs will be used when the max. size has been reached. The unity being used is the byte, so if we want a max. size of 1 KiB, the value which we should set would be 1024
-* `crawlMaxFolderTreeDepth`: **linguacrawl-specific option** that allows to specify the max. folder depth for a URL to be taken into account
-* `crawlScoutSteps`: **linguacrawl-specific option** that allows to specify the number of documents to be downloaded from a web-site before the scouting criterion is evaluated (one of the most important features of `linguacrawl` is the scout strategy that implements in order to be as efficient as possible)
-* `crawlBlackListURL`: **linguacrawl-specific option** that allows to specify a list of domains which will not be taken into account (i.e. they will not be crawled). The default value is: 'wordpress','blogspot','facebook','google','wikipedia','youtube','perehodi','twitter','instagram'
-* `crawlPrefixFilter`: **linguacrawl-specific option** that allows to avoid resources which begins with a concrete pattern and we know, previously, that is not going to give us useful information
+* `crawlFileTypes`: allows to specify the files which we want to retrieve. Both `wget` and `linguacrawl` use the Content-Type in order to search a pattern which matches, so either "html" or "text/html" will retrieve those files with Content-Type "text/html". The [Content-Type header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) contains [MIME](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types) values
 
 If you want to also crawl PDFs (only `wget` support for now), use these settings:
 
@@ -155,77 +141,29 @@ crawler: wget
 crawlFileTypes: "html,pdf"
 ```
 
-If you want to use `heritrix` crawler, you should provide the installation folder of `heritrix` and optionally the url (default is 'localhost:8443') and the user:password (default is 'admin:admin'):
-
-```yaml
-crawler: heritrix
-heritrixPath: /home/user/heritrix-3.4.0-20190418
-heritrixUrl: "https://localhost:8443"
-heritrixUser: "admin:admin"
-```
-
-Heritrix crawler will check if there is a checkpoint in its 'jobs' folder and resume from the latest. If crawl takes longer than the crawl time limit, it will automatically create a checkpoint for a future incremental crawl.
-
-Other option might be `linguacrawl`, which shares multiple configuration options with the rest of crawlers, but there are also unique options for its own configuration:
-
-```yaml
-crawler: linguacrawl
-crawlFileTypes: text/html,application/pdf
-crawlTLD: ["fr", "en"]
-crawlSizeLimit: "1024"
-crawlCat: true
-crawlCatMaxSize: 1024
-crawlMaxFolderTreeDepth: "20"
-crawlScoutSteps: "200"
-crawlBlackListURL: ['wordpress','blogspot','facebook','google','wikipedia','youtube','perehodi','twitter','instagram']
-crawlPrefixFilter: ['mailto:']
-crawlerNumThreads: "12"
-crawlerConnectionTimeout: "3600"
-dumpCurrentCrawl: true
-resumePreviousCrawl: false
-```
-
-If `linguacrawl` is used, a YAML file is created on the fly in order to use it as configuration file, and you can check this file out to be sure that is configured as you want. There are multiple options which are provided with a default value if none was set, so might be interesting to visualize the generated YAML configuration file if you want a concrete behaviour or something is not working as you expected. Those default values are set because are mandatory for `linguacrawl`. Other default behaviour which should be taken into account is:
-
-* Default User Agent is used: Mozilla/5.0 (compatible; Bitextor/8 + <https://github.com/bitextor/bitextor>)
-* Default URL blacklist is used if not specified any (you can specify "[]" if you do not want any element in the blacklist): ['wordpress','blogspot','facebook','google','wikipedia','youtube','perehodi','twitter','instagram']
-* Default prefix filter is used if not specified any (you can specify "[]" if you do not want any element in the prefix filter list): ['mailto:']
-* A maximum of 3 attempts will be made in order to download a resource.
-* The number of minimum languages in a site will be 2, and in the case of not satisfy this condition, the site will be discarted
-* The mandatory lang to be found in a site will be determined by `lang1` or `lang2` if not defined. A minimum of 10% of content has to be present in the mandatory language in order to not discard a resource
-* The accepted TLDs will be those specified in `lang1`, `lang2`, `langs` and `crawlTLD`
-* `linguacrawl` works efficiently when multiple hosts are provided, and due to this, we provide all the hosts which are specified in `hosts` and `hostsFile`. This fact makes that we lose some information, like the main source of the links that are crawled in a concrete host of the ones which were provided in the configuration file, but we make a more efficient crawling. This behaviour is different from the rest the crawlers, where each of them execute a different instance with a host
-* WARNING: if you use linguacrawl in a cluster, it is highly recommended to use `crawlCat` and `crawlCatMaxSize` in order to balance the work (it is not usual to use a crawler in a cluster)
-
 ### Preprocessing and sharding
 
 After crawling, the downloaded web are processed to extract clean text, detect language, etc. The following set of option define how that process is carried out. After preprocessing, the extracted data is sharded via [giashard](https://github.com/paracrawl/giashard).
 
 ```yaml
 # preprocessing
-preprocessor: warc2text
 langs: [en, es, fr]
 
 ## with warc2preprocess only
 boilerpipeCleaning: true
-parser: "bs4"
 ftfy: false
 cleanHTML: false
-langID: cld2
 
 # sharding
 shards: 8 # 2^8 shards
 batches: 1024 # batches of up to 1024MB
 ```
 
-* `preprocessor`: this options allows to select one of two text extraction tools. Options: `warc2preprocess` and `warc2text`. `warc2text` is the default option, it is faster but currently unable to process PDFs.
 * `langs`: a list of languages that will be processed during the preprocessing step. When this option is empty, only LANG1 and LANG2 will be processed during this step. NOTE: if `warc2text`is enabled, every language will be processed, but only languages specified in `langs` will move on to sentence splitting
-* `langID`: specify the model that should be used for language identification. Options are [`cld2`](https://github.com/CLD2Owners/cld2) (default) and [`cld3`](https://github.com/google/cld3). Note that `cld2` is faster, but `cld3` can be more accurate for certain languages. `warc2text` uses `cld2`
 * `ftfy`: ftfy is a tool that solves encoding errors. Disabled by default
 * `cleanHTML`: cleaning HTML takes place before parsing, and the point of this step is to remove some parts of HTML that don't contain text (such as CSS, embedded scripts or special tags) before running ftfy, which is a quite slow. This has an unwanted side effect of removed too much content if the HTML document is malformed. So, enable this step if you want to gain time at the risk of losing some text
 * `html5lib`: extra parse with `html5lib`, which is slow but the cleanest option and parses the HTML the same way as the modern browsers, which is interesting for broken HTMLs.
 * `boilerpipeCleaning`: option that enables the use of the tool [boilerpipe](https://boilerpipe-web.appspot.com/) to remove boilerplates from HTML documents; by default this is disabled. NOTE: this option does not do anything with `warc2text: true`
-* `parser`: option that selects HTML parsing library for text extraction; Options are ['bs4'](https://www.crummy.com/software/BeautifulSoup/bs4/doc/), ['modest'](https://github.com/rushter/selectolax), 'lxml' (which uses `html5lib` parsed tree to recursively extract text from tags, so it forces the `html5lib` option) or 'simple', which is an HTML tokenizer built with [HTMLParser](https://docs.python.org/3/library/html.parser.html). NOTE: does not do anything `warc2text: true`
 * `PDFextract`: set to 'true' to use it instead of system native poppler `pdf2html` converter
 * `PDFextract_configfile`: set a path for a PDFExtract config file, specially for language models for a better sentence splitting (see [more info](https://github.com/bitextor/pdf-extract/#pdfextractjson))
 * `PDFextract_sentence_join_path`: set a path for sentence-join.py script, otherwise, the one included with bitextor will be used
@@ -279,89 +217,13 @@ lang1: es
 lang2: en
 ```
 
-Two strategies are implemented in Bitextor for document alignment. The first one uses bilingual lexica to compute word-overlapping-based similarity metrics; these metrics are combined with other features that are extracted from HTML files and used by a linear regressor to obtain a similarity score. The second one uses an external machine translation (MT) and a [TF/IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) similarity metric computed on the original documents in one of the languages, and the translation of the documents of the other language.
-
-```yaml
-documentAligner: externalMT
-```
-
-The variable `documentAligner` can take two different values, each of them taking a different document-alignment strategy:
-
-<!-- The variable `documentAligner` can take three different values, each of them taking a different document-alignment strategy: -->
-
-* `DIC`: takes the strategy using bilingual lexica and a linear regressor.
-* `externalMT`: takes the strategy using MT, in this case using an external MT script (provided by the user) that reads source-language text from the standard input and writes the translations to the standard output
-<!-- * `NMT`: uses parallel data to train a neural MT (NMT) system that is then used for document alignment -->
-
-#### Using bilingual lexica
-
-```yaml
-dic: /home/user/en-fr.dic
-```
-
-Option `dic` specifies the path to the bilingual lexicon to be used for document alignment. If the lexicon specified does not exist, the pipeline will try to build it using a parallel corpus provided through the variable `initCorpusTrainingPrefix` using `mgiza` tools:
-
-```yaml
-initCorpusTrainingPrefix: ['/home/user/Europarl.en-fr.train']
-```
-
-This variable must contain one or more **corpus prefixes**. For a given prefix (`/home/user/training` in the example) the pipeline expects to find one file `prefix`.`lang1` and another `prefix`.`lang2` (in the example, `/home/user/Europarl.en-fr.train.en` and `/home/user/Europarl.en-fr.train.fr`). If several training prefixes are provided, the corresponding files will be concatenated before building the bilingual lexicon.
-
-**Suggestion**: a number of pre-built bilingual lexica is available in the repository [bitextor-data](https://github.com/bitextor/bitextor-data/releases/tag/bitextor-v1.0). It is also possible to use other lexica already available, such as those in [OPUS](http://opus.nlpl.eu/), as long as their format is the same as those in the repository.
-
-If you are running out of memory in the `mkcls` rule, maybe you should activate original `mkcls` binary instead of `clustercat` interface using:
-
-```yaml
-mkcls: true
-```
-
-#### Using external MT
-
-```yaml
-alignerCmd: "example/dummy-translate.sh"
-translationDirection: "es2en"
-documentAlignerThreshold: 0.1
-```
-
-* `alignerCmd`: command to call the external MT script
-* `translationDirection`: the direction of the translation system, default is lang1->lang2
-* `documentAlignerThreshold`: threshold for discarding document pairs with a very low TF/IDF similarity score; this option takes values in [0,1] and is 0.1 by default
-
 ### Segment alignment
 
-After document alignment, the next step in the pipeline is segment alignment. This can be carried out by using the tool [hunalign](http://mokk.bme.hu/resources/hunalign/) or the tool [bleualign](https://github.com/rsennrich/Bleualign). The first one uses a bilingual lexicon and is best suited for the `DIC` option of `documentAligner`; the second one uses MT and is only available if one of the options based on MT has been specified in `documentAligner`.
-
-```yaml
-sentenceAligner: bleualign
-sentenceAlignerThreshold: 0.1
-```
-
-* `sentenceAligner`: segment aligner tool which is going to be used. Default is `bleualign`, but `hunalign` can be used in order to achieve a dictionary-based alignment. If `bleualign` is used, `documentAligner: externalMT` is mandatory, but in the case of `hunalign`, both `externalMT` and `DIC` are allowed as document aligner.
-* `sentenceAlignerThreshold`: score threshold for filtering pairs of sentences with a score too low. The value should be set to a value in [0,1] (both `bleualign` and `hunalign`). The default value is 0.0.
+After document alignment, the next step in the pipeline is segment alignment.
 
 ### Parallel data filtering
 
-Parallel data filtering is carried out with the tool [Bicleaner](https://github.com/bitextor/bicleaner); this tool uses a pre-trained regression model to filter out pairs of segments with a low confidence score (learn more about Bicleaner [here](https://github.com/bitextor/bicleaner)). The options required to make it work are:
-
-```yaml
-bicleaner: /home/user/bicleaner-model/en-fr/training.en-fr.yaml
-bicleanerThreshold: 0.6
-```
-
-* `bicleaner`: path to the YAML configuration file of a pre-trained model. A number of pre-trained models are available [here](https://github.com/bitextor/bicleaner-data/releases/latest). They are ready to be downloaded and decompressed
-* `bicleanerThreshold`: threshold for the confidence score obtained with bitextor to filter low-confidence segment pairs. It is recommended to set it to values in [0.5,0.7], even though it is set to 0.0 by default
-
-If the Bicleaner model is not available, the pipeline will try to train one automatically from the data provided through the config file options `initCorpusTrainingPrefix` and `bicleanerCorpusTrainingPrefix`:
-
-```yaml
-initCorpusTrainingPrefix: ['/home/user/Europarl.en-fr.train']
-bicleanerCorpusTrainingPrefix: ['/home/user/RF.en-fr']
-```
-
-* `initCorpusTrainingPrefix`: prefix to parallel corpus (see section *Variables for document alignment using bilingual lexica*) that will be used to train statistical dictionaries which are part of the Bicleaner model. This option affects and is affected by `dic` config option, which in case that provided `dic` does not exist, a new one will be generated; in case that provided `dic` does exist, should not be replaced (it does might!) but a new one would be generated and stored in "`dic`.generated". If `sentenceAligner: hunalign` is being used and this situation happens, the provided and existant `dic` will be used in the main pipeline while the new dictionary will only be used in order to train the Bicleaner model
-* `bicleanerCorpusTrainingPrefix`: prefix to the parallel corpus that will be used to train the regressor that obtains the confidence score in Bicleaner
-
-It is important to provide different parallel corpora for these two options as this helps Bicleaner when dealing with unknown words (that do not appear in the statistical dictionaries) during scoring.
+Parallel data filtering is carried out with the tool [Bicleaner-AI](https://github.com/bitextor/bicleaner-ai).
 
 ### Post-processing
 

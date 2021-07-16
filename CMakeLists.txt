@@ -25,31 +25,7 @@ if(NOT SKIP_WARC2TEXT)
     add_subdirectory(${PROJECT_SOURCE_DIR}/warc2text warc2text)
 endif()
 
-if(NOT SKIP_BLEUALIGN)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/bleualign-cpp bleualign-cpp)
-endif()
-
-if (NOT SKIP_HUNALIGN)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/hunalign/src)
-    install(PROGRAMS ${PROJECT_BINARY_DIR}/bin/hunalign
-        DESTINATION ${CMAKE_INSTALL_BINDIR}
-    )
-endif()
-
-if (NOT SKIP_DOCALIGN)
-    set(BUILD_TESTING OFF)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/document-aligner document-aligner)
-endif()
-
 if (NOT SKIP_BIROAMER)
     add_subdirectory(${PROJECT_SOURCE_DIR}/biroamer fast_align)
 endif()
 
-if (NOT SKIP_MGIZA)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/mgiza/mgizapp mgizapp)
-endif()
-
-if (NOT SKIP_KENLM)
-    set(KENLM_MAX_ORDER 7)
-    add_subdirectory(${PROJECT_SOURCE_DIR}/kenlm kenlm)
-endif()
