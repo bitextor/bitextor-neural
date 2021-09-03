@@ -67,7 +67,7 @@ def get_customnbp(nbp_dict, language):
     return nbp
 
 
-def get_mt_docalign_inputs(src_batches, trg_batches):
+def get_docalign_inputs(src_batches, trg_batches):
     # product( [[shard, batch], [shard, batch], ...], [[shard, batch], [shard, batch], ...] )
     iterator = product([batch.split('/')[-2:] for batch in src_batches],
                        [batch.split('/')[-2:] for batch in trg_batches])

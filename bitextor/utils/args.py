@@ -143,7 +143,7 @@ def validate_args(config):
         'dic': {'type': 'string', 'dependencies': {}},
         'initCorpusTrainingPrefix': {'type': 'list'},
         # sentence alignment
-        'sentenceAligner': {'type': 'string', 'allowed': ['bleualign', 'hunalign'], 'default': 'bleualign'},
+        'sentenceAligner': {'type': 'string', 'allowed': ['vecalign'], 'default': 'vecalign'},
         'sentenceAlignerThreshold': {'type': 'float'},
         # post processing
         'deferred': {'type': 'boolean', 'default': False},
@@ -204,7 +204,7 @@ def validate_args(config):
         if config['preprocessor'] == 'warc2text':
             config['writeHTML'] = True
 
-    if "sentenceAligner" not in config or config['sentenceAligner'] == 'bleualign':
+    if "sentenceAligner" not in config or config['sentenceAligner'] == 'vecalign':
         # schema['sentenceAligner']['dependencies'] = frozenset({'documentAligner': 'externalMT'})
         # dependencies are not working because of the frozenset
         schema['sentenceAligner']['dependencies'] = {'documentAligner': 'externalMT'}

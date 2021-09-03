@@ -165,12 +165,10 @@ EMPTY_SHARD_CHECK = f"{TMPDIR}/empty_shard"
 #################################################################
 # DOCALIGN
 DOCALIGN = "neural"
-# mt
-SRC_LANG = LANG1
-TRG_LANG = LANG2
-if "translationDirection" in config and config["translationDirection"] == f"{LANG2}2{LANG1}":
-    SRC_LANG = LANG2
-    TRG_LANG = LANG1
+DOC_THRESHOLD = 0.7
+
+if "documentAlignerThreshold" in config:
+    DOC_THRESHOLD = config["documentAlignerThreshold"]
 
 #################################################################
 # SEGALIGN
@@ -290,9 +288,6 @@ TARGETS = TARGET_2_WARCS.keys()
 ### WORKFLOW EXECUTION ##########################################
 THREADS = {
     "split": 1,
-    "translate": 1,
-    "tokenise_src": 1,
-    "tokenise_trg": 1,
     "docalign": 1,
     "segalign": 1,
     "bifixer": 1,
@@ -314,10 +309,6 @@ if "until" not in config:
         lang2=LANG2,
         output_file=OUTPUT_FILES,
     )
-    # this has to be added, because tokenisation rules are the last rules that don't need both shards
-    # otherwise snakemake waites for both shards be completed to continue
-    OUTPUT.append(f"{DATADIR}/shards/05.tokenise.{TRG_LANG}")
-    OUTPUT.append(f"{DATADIR}/shards/05.tokenise.{SRC_LANG}2{TRG_LANG}")
 elif UNTIL == "crawl":
     for domain, hosts in DOMAIN_2_HOSTS.items():
         for host in hosts:
@@ -335,18 +326,9 @@ elif UNTIL == "shard":
     OUTPUT = expand("{datadir}/shards/02.batches.{lang}", datadir=DATADIR, lang=LANGS)
 elif UNTIL == "split":
     OUTPUT = expand("{datadir}/shards/03.split.{lang}", datadir=DATADIR, lang=LANGS)
-elif UNTIL == "translate":
-    OUTPUT = f"{DATADIR}/shards/04.translate.{SRC_LANG}2{TRG_LANG}"
-elif UNTIL == "tokenise_trg":
-    # TODO: decide where to put '0X_step' files (output of aggregate rules)
-    OUTPUT = f"{DATADIR}/shards/05.tokenise.{TRG_LANG}"
-elif UNTIL == "tokenise_src":
-    OUTPUT = f"{DATADIR}/shards/05.tokenise.{SRC_LANG}2{TRG_LANG}"
 else:
-    OUTPUT.append(f"{DATADIR}/shards/05.tokenise.{TRG_LANG}")
-    OUTPUT.append(f"{DATADIR}/shards/05.tokenise.{SRC_LANG}2{TRG_LANG}")
     if UNTIL == "docalign":
-        OUTPUT.append(f"{TRANSIENT}/06_01.docalign.{SRC_LANG}_{TRG_LANG}")
+        OUTPUT.append(f"{TRANSIENT}/06_01.docalign.{LANG1}_{LANG2}")
     elif UNTIL == "segalign":
         OUTPUT.append(f"{TRANSIENT}/06_02.segalign.{LANG1}_{LANG2}")
     elif UNTIL == "bifixer":
@@ -364,12 +346,6 @@ shell.prefix("set -euo pipefail;")
 rule all:
     input:
         OUTPUT,
-
-
-#################################################################
-### INCLUDE #####################################################
-include: "rules/dicgeneration.smk"
-include: "rules/dictdocsegalign.smk"
 
 
 #################################################################
@@ -548,168 +524,40 @@ def get_align_inputs(src_lang, trg_lang):
     src_batches = get_batches(src_lang)
     trg_batches = get_batches(trg_lang)
     # each input -> (shard, (src_batch, trg_batch))
-    inputs = get_mt_docalign_inputs(src_batches, trg_batches)
+    inputs = get_docalign_inputs(src_batches, trg_batches)
     return inputs
 
 
 rule aggregate_matches:
     input:
         lambda wildcards: [
-            f"{TRANSIENT}/{SRC_LANG}_{TRG_LANG}/{shard}/{SRC_LANG}{src_batch}_{TRG_LANG}{trg_batch}.06_01.matches"
-            for (shard, (src_batch, trg_batch)) in get_align_inputs(SRC_LANG, TRG_LANG)
+            f"{TRANSIENT}/{LANG1}_{LANG2}/{shard}/{LANG1}{src_batch}_{LANG2}{trg_batch}.06_01.matches"
+            for (shard, (src_batch, trg_batch)) in get_align_inputs(LANG1, LANG2)
         ],
     output:
-        f"{TRANSIENT}/06_01.docalign.{SRC_LANG}_{TRG_LANG}",
+        f"{TRANSIENT}/06_01.docalign.{LANG1}_{LANG2}",
     shell:
         """ echo {input} | tr ' ' '\n' > {output} """
 
 
-# MT ############################################################
-
-
-rule custom_translate:
+rule doc_emb_matches:
     input:
-        source=f"{DATADIR}/shards/{SRC_LANG}/{{shard}}/{{src_batch}}/sentences.gz",
+        l1=f"{DATADIR}/shards/{LANG1}/{{shard}}/{{src_batch}}/sentences.gz",
+        l2=f"{DATADIR}/shards/{LANG2}/{{shard}}/{{trg_batch}}/sentences.gz",
     output:
-        f"{DATADIR}/shards/{SRC_LANG}/{{shard}}/{{src_batch}}/sentences_{TRG_LANG}.gz",
-    threads: max(2, THREADS["translate"])
+        f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_01.matches",
     params:
-        THREADS["translate"],
-    shell:
-        """
-        parallel_cmd=""
-        if [ {params} -gt 1 ]; then
-            parallel_cmd="parallel --gnu --halt 2 --pipe --j {params} -k"
-        fi
-        zcat {input.source} \
-            | {PROFILING} b64filter cache ${{parallel_cmd}} {MT_COMMAND} \
-            | pigz -c > {output}
-        n_before=$(zcat {input.source} | base64 -d | wc -l)
-        n_after=$(zcat {output} | base64 -d | wc -l)
-        # echo "Check lines count: $n_before -> $n_after for {SRC_LANG}/{wildcards.shard}/{wildcards.src_batch}"
-        if [ $n_before -ne $n_after ]
-        then
-            >&2 echo "Lines count differ: source $n_before, target $n_after"
-            exit 1
-        fi
-        """
-
-
-if MT_COMMAND is None:
-    translation_output = f"{DATADIR}/shards/{SRC_LANG}/{{shard}}/{{src_batch}}/sentences.gz"
-else:
-    translation_output = rules.custom_translate.output
-
-
-rule aggregate_translate:
-    input:
-        lambda wildcards: [f"{batch}/sentences_{TRG_LANG}.gz" for batch in get_batches(SRC_LANG)],
-    output:
-        f"{DATADIR}/shards/04.translate.{SRC_LANG}2{TRG_LANG}",
-    shell:
-        """ echo "{input}" | tr ' ' '\n' > {output} """
-
-
-rule tokenise_translated:
-    input:
-        translation_output,
-    output:
-        f"{DATADIR}/shards/{SRC_LANG}/{{shard}}/{{src_batch}}/tokenised_{TRG_LANG}.gz",
-    params:
-        tokeniser=lambda wildcards: apply_format(get_lang_or_default(WORDTOKS, TRG_LANG), '--word-tokenizer "{}"'),
-        lemmatizer=lambda wildcards: apply_format(get_lang_or_default(MORPHTOKS, TRG_LANG), '--morph-analyser "{}"'),
-    threads: THREADS["tokenise_src"]
-    shell:
-        """
-        parallel_cmd=""
-        if [ {threads} -gt 1 ]; then
-            parallel_cmd="parallel --gnu --halt 2 --pipe --j {threads} -k"
-        fi
-        zcat {input} \
-            | {PROFILING} ${{parallel_cmd}} python3 {WORKFLOW}/bitextor_tokenize.py \
-                {params.tokeniser} {params.lemmatizer} \
-                --langcode {TRG_LANG} \
-            | pigz -c > {output}
-        """
-
-
-rule tokenise_target:
-    input:
-        f"{DATADIR}/shards/{TRG_LANG}/{{shard}}/{{trg_batch}}/sentences.gz",
-    output:
-        f"{DATADIR}/shards/{TRG_LANG}/{{shard}}/{{trg_batch}}/tokenised.gz",
-    params:
-        tokeniser=lambda wildcards: apply_format(get_lang_or_default(WORDTOKS, TRG_LANG), '--word-tokenizer "{}"'),
-        lemmatizer=lambda wildcards: apply_format(get_lang_or_default(MORPHTOKS, TRG_LANG), '--morph-analyser "{}"'),
-    threads: THREADS["tokenise_trg"]
-    shell:
-        """
-        parallel_cmd=""
-        if [ {threads} -gt 1 ]; then
-            parallel_cmd="parallel --gnu --halt 2 --pipe --j {threads} -k"
-        fi
-        zcat {input} \
-            | {PROFILING} ${{parallel_cmd}} python3 {WORKFLOW}/bitextor_tokenize.py \
-                {params.tokeniser} {params.lemmatizer} \
-                --langcode {TRG_LANG} \
-            | pigz -c > {output}
-        """
-
-
-rule tokenise_source:
-    input:
-        f"{DATADIR}/shards/{SRC_LANG}/{{shard}}/{{src_batch}}/sentences.gz",
-    output:
-        f"{DATADIR}/shards/{SRC_LANG}/{{shard}}/{{src_batch}}/tokenised.gz",
-    params:
-        tokeniser=lambda wildcards: apply_format(get_lang_or_default(WORDTOKS, TRG_LANG), '--word-tokenizer "{}"'),
-        lemmatizer=lambda wildcards: apply_format(get_lang_or_default(MORPHTOKS, TRG_LANG), '--morph-analyser "{}"'),
-    threads: THREADS["tokenise_src"]
-    shell:
-        """
-        parallel_cmd=""
-        if [ {threads} -gt 1 ]; then
-            parallel_cmd="parallel --gnu --halt 2 --pipe --j {threads} -k"
-        fi
-        zcat {input} \
-            | {PROFILING} ${{parallel_cmd}} python3 {WORKFLOW}/bitextor_tokenize.py \
-                {params.tokeniser} {params.lemmatizer} \
-                --langcode {SRC_LANG} \
-            | pigz -c > {output}
-        """
-
-
-rule aggregate_tokenise_target:
-    input:
-        lambda wildcards: [f"{batch}/tokenised.gz" for batch in get_batches(TRG_LANG)],
-    output:
-        f"{DATADIR}/shards/05.tokenise.{TRG_LANG}",
-    shell:
-        """ echo {input} | tr ' ' '\n' > {output} """
-
-
-rule aggregate_tokenise_source:
-    input:
-        lambda wildcards: [f"{batch}/tokenised_{TRG_LANG}.gz" for batch in get_batches(SRC_LANG)],
-    output:
-        f"{DATADIR}/shards/05.tokenise.{SRC_LANG}2{TRG_LANG}",
-    shell:
-        """ echo {input} | tr ' ' '\n' > {output} """
-
-
-rule mt_matches:
-    input:
-        l1=rules.tokenise_translated.output,
-        l2=rules.tokenise_target.output,
-    output:
-        f"{TRANSIENT}/{SRC_LANG}_{TRG_LANG}/{{shard}}/{SRC_LANG}{{src_batch}}_{TRG_LANG}{{trg_batch}}.06_01.matches",
-    params:
-        folder=f"{TRANSIENT}/{SRC_LANG}_{TRG_LANG}/{{shard}}",
+        folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}",
     threads: THREADS["docalign"]
     shell:
         """
         mkdir -p {params.folder}
-        {PROFILING} docalign {input.l1} {input.l2} --threshold {DOC_THRESHOLD} -j {threads} > {output}
+        cat <(zcat {input.l1} | sed "s:$:	-	src:") <(zcat {input.l2} | sed "s:$:	-	trg:") | {PROFILING} neural-document-aligner - {params.folder}/emb_src {params.folder}/emb_trg \
+                        --docalign-strategy 'faiss' --weights-strategy 0 \
+                        --merging-strategy 3 --results-strategy 0 \
+                        --emb-optimization-strategy 2 --gen-emb-optimization-strategy 2 \
+                        --output-with-idxs --paths-to-docs-are-base64-values \
+                        --threshold {DOC_THRESHOLD} > {output}
         """
 
 
@@ -717,8 +565,8 @@ rule mt_matches:
 rule aggregate_segalign:
     input:
         lambda wildcards: [
-            f"{TRANSIENT}/{SRC_LANG}_{TRG_LANG}/{shard}/{SRC_LANG}{src_batch}_{TRG_LANG}{trg_batch}.06_02.segalign.gz"
-            for (shard, (src_batch, trg_batch)) in get_align_inputs(SRC_LANG, TRG_LANG)
+            f"{TRANSIENT}/{LANG1}_{LANG2}/{shard}/{LANG1}{src_batch}_{LANG2}{trg_batch}.06_02.segalign.gz"
+            for (shard, (src_batch, trg_batch)) in get_align_inputs(LANG1, LANG2)
         ],
     output:
         f"{TRANSIENT}/06_02.segalign.{LANG1}_{LANG2}",
@@ -726,22 +574,20 @@ rule aggregate_segalign:
         """ echo {input} | tr ' ' '\n' > {output} """
 
 
-# BLEUALIGN #####################################################
+# VECALIGN #####################################################
 rule vecalign:
     input:
-        indices=rules.mt_matches.output,
-        plain1=f"{DATADIR}/shards/{SRC_LANG}/{{shard}}/{{src_batch}}/sentences.gz",
-        plain2=f"{DATADIR}/shards/{TRG_LANG}/{{shard}}/{{trg_batch}}/sentences.gz",
-        url1=f"{DATADIR}/shards/{SRC_LANG}/{{shard}}/{{src_batch}}/url.gz",
-        url2=f"{DATADIR}/shards/{TRG_LANG}/{{shard}}/{{trg_batch}}/url.gz",
-        translated1=translation_output,
+        indices=rules.doc_emb_matches.output,
+        plain1=f"{DATADIR}/shards/{LANG1}/{{shard}}/{{src_batch}}/sentences.gz",
+        plain2=f"{DATADIR}/shards/{LANG2}/{{shard}}/{{trg_batch}}/sentences.gz",
+        url1=f"{DATADIR}/shards/{LANG1}/{{shard}}/{{src_batch}}/url.gz",
+        url2=f"{DATADIR}/shards/{LANG2}/{{shard}}/{{trg_batch}}/url.gz",
     params:
-        folder=f"{TRANSIENT}/{SRC_LANG}_{TRG_LANG}/{{shard}}",
+        folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}",
         workers=THREADS["segalign"],
-    # in segalign rule output columns are reordered (or not) in accordance with translationDirection
     output:
         temp(
-            f"{TRANSIENT}/{SRC_LANG}_{TRG_LANG}/{{shard}}/{SRC_LANG}{{src_batch}}_{TRG_LANG}{{trg_batch}}.06_02.segalign.gz"
+            f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_02.segalign.gz"
         ),
     threads: max(THREADS["segalign"], 2)
     shell:
@@ -755,7 +601,6 @@ rule vecalign:
             | docjoin \
                 -l {input.url1} -r {input.url2} \
                 -l {input.plain1} -r {input.plain2} \
-                -l {input.translated1} \
             | {PROFILING} ${{parallel_cmd}} vecalign --threshold {SEGALIGN_THRESHOLD} \
             | pigz -c > {output}
         """
@@ -775,8 +620,8 @@ if SEGALIGN == "hunalign":
 checkpoint split_segalign:
     input:
         lambda wildcards: [
-            f"{TRANSIENT}/{SRC_LANG}_{TRG_LANG}/{shard}/{SRC_LANG}{src_batch}_{TRG_LANG}{trg_batch}.{split_input_filename}{split_input_extension}"
-            for (shard, (src_batch, trg_batch)) in get_align_inputs(SRC_LANG, TRG_LANG)
+            f"{TRANSIENT}/{LANG1}_{LANG2}/{shard}/{LANG1}{src_batch}_{LANG2}{trg_batch}.{split_input_filename}{split_input_extension}"
+            for (shard, (src_batch, trg_batch)) in get_align_inputs(LANG1, LANG2)
         ],
     output:
         batches=f"{TRANSIENT}/{LANG1}_{LANG2}/{LANG1}_{LANG2}.postprocessing_batches",
@@ -815,7 +660,7 @@ checkpoint split_segalign:
                     CAT=xzcat
                 fi
                 $CAT {input} \
-                    | ( [ "{SRC_LANG}" = "{LANG1}" ] && cat || awk -F '\t' '{{ print $2,$1,$4,$3,$5 }}' OFS='\t' )\
+                    | ( [ "{LANG1}" = "{LANG1}" ] && cat || awk -F '\t' '{{ print $2,$1,$4,$3,$5 }}' OFS='\t' )\
                     | python3 {WORKFLOW}/bitextor_split_segalign.py -f 3,4 -s {params.size} --gzip -o "{params.folder}/"
                 if [ -z "$(ls -A {params.folder})" ]; then
                     cat < /dev/null > {output.batches}
@@ -865,33 +710,6 @@ rule aggregate_bifixer:
 bicleaner_input = rules.bifixer.output
 if not BIFIXER:
     bicleaner_input = rules.bifixer.input.segalign
-
-
-rule bicleaner_train_model:
-    input:
-        corpusl1=expand("{dataset}.{lang}.xz", dataset=BICLEANER_TRAIN_PREFIXES, lang=LANG1),
-        corpusl2=expand("{dataset}.{lang}.xz", dataset=BICLEANER_TRAIN_PREFIXES, lang=LANG2),
-        e2f=f"{DIC_TRAINING}.lex.e2f.gz",
-        f2e=f"{DIC_TRAINING}.lex.f2e.gz",
-        vcb1=f"{mgizaModelDir}/corpus.{LANG1}.filtered.vcb.gz",
-        vcb2=f"{mgizaModelDir}/corpus.{LANG2}.filtered.vcb.gz",
-        dic=f"{DIC_TRAINING}",  # If DIC != DIC_TRAINING, DIC_TRAINING will be generated but not used because of this input
-        # This input makes the dictionary to be generated (without it, statistical info would be generated but not the dic)
-    output:
-        model=BICLEANER_MODEL,
-    shell:
-        """
-        training=$(mktemp {TMPDIR}/train.XXXXXXXX)
-        paste <(xzcat -f {input.corpusl1}) <(xzcat -f {input.corpusl2}) > $training
-        DIR=$(dirname {BICLEANER_MODEL})
-        echo $DIR
-        lines=$(cat $training | wc -l)
-        trainlines=$(echo \"$lines*4/10\" | bc)
-        testlines=$(echo \"($lines-2*$trainlines)/2\" | bc)
-        # Parameters for good/bad examples have been removed -> now the whole file is being used (https://github.com/bitextor/bicleaner/commit/cdd1bc03928701884cd42ffac4b602220ec3e732)
-        {PROFILING} bicleaner-train $training -S "{WORDTOK1}" -T "{WORDTOK2}" --treat_oovs --normalize_by_length -s {LANG1} -t {LANG2} -d {input.e2f} -D {input.f2e} -f {input.vcb1} -F {input.vcb2} -c $DIR/{LANG1}-{LANG2}.classifier -m {BICLEANER_MODEL} --classifier_type random_forest
-        rm $training
-        """
 
 
 rule bicleaner:

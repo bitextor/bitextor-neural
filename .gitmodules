@@ -10,3 +10,6 @@
 [submodule "preprocess"]
 	path = preprocess
 	url = https://github.com/kpu/preprocess
+[submodule "neural-document-aligner"]
+	path = neural-document-aligner
+	url = https://github.com/bitextor/neural-document-aligner.git

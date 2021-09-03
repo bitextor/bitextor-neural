@@ -1,0 +1,33 @@
+# BASIC VARIABLES
+dataDir: ~/permanent/data
+permanentDir: ~/permanent
+transientDir: ~/transient
+tempDir: ~/transient
+
+# DATA SOURCES
+warcs: ["/home/lpla/data/warc/greenpeace.original.warc.gz"] # contains a domain to crawl per line
+
+# PREPROCESSING
+preprocessor: "warc2text"
+shards: 8 # 2^8 = 256 shards
+batches: 1024 # each shard split into chunks of 1024 MB
+
+lang1: 'en'
+lang2: 'fr'
+
+# ALIGN
+documentAlignerThreshold: 0.7
+alignerCmd: "bash /home/lpla/bitextor-neural/bitextor/example/dummy-translate.sh"
+translationDirection: fr2en
+
+sentenceAligner: 'vecalign'
+sentenceAlignerThreshold: 0.1
+
+# CLEANING
+bifixer: true
+bicleaner: ~/bicleaner-model/en-fr/en-fr.yaml
+bicleanerThreshold: 0.5
+biroamer: false
+
+deduped: true
+tmx: true
