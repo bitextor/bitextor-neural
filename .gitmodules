@@ -13,3 +13,9 @@
 [submodule "neural-document-aligner"]
 	path = neural-document-aligner
 	url = https://github.com/bitextor/neural-document-aligner.git
+[submodule "vecalign"]
+	path = vecalign
+	url = https://github.com/thompsonb/vecalign.git
+[submodule "LASER"]
+	path = LASER
+	url = https://github.com/facebookresearch/LASER.git

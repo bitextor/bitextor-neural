@@ -1,0 +1,6 @@
+torch>=1.0.0
+numpy>=1.15.4
+Cython==0.29.6
+faiss-gpu>=1.6.5
+transliterate==1.10.2
+jieba==0.39

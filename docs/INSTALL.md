@@ -160,6 +160,27 @@ pip3 install ./neural-document-aligner
 
 If you don't want to install all Python requirements in `requirements.txt` because you don't expect to run some of Bitextor modules, you can comment those `*.txt` in `requirements.txt` and rerun Bitextor installation.
 
+### LASER
+
+[LASER](https://github.com/facebookresearch/LASER) is a library to calculate and use multilingual sentence embeddings. It is the main method to create the necessary embeddings for (Vecalign)[https://github.com/thompsonb/vecalign], the neural sentence aligner.
+
+```bash
+# python dependencies
+pip3 install -r requirements/requirements-laser.txt
+
+export LASER="${PWD}/LASER"
+
+# models
+bash LASER/install_models.sh
+# other dependencies
+bash LASER/install_external_tools.sh
+```
+
+Once you have installed LASER, be aware:
+
+* PyTorch might be necessary to be changed for a version which matches your specific hardware and software (e.g. CUDA driver version).
+* (mecab)[https://github.com/taku910/mecab], the Japonese segmenter, it has not been installed since LASER advice to install it manually. This dependency is optional, and not necessary if you will not process Japonese.
+
 ### [Optional] Heritrix
 
 [Heritrix](https://github.com/internetarchive/heritrix3) is Internet Archive's web crawler. To use it in Bitextor, first download Heritrix from [here](https://github.com/internetarchive/heritrix3/wiki#downloads) and unzip the release.

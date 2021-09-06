@@ -598,7 +598,7 @@ rule vecalign:
         fi
 
         cat <(zcat {input.plain1} | sed "s:$:	-	src:") <(zcat {input.plain2} | sed "s:$:	-	trg:") \
-            | {PROFILING} python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" "{params.vecalign_dir}" \
+            | {PROFILING} LASER="{WORKFLOW}/../LASER" python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" "{params.vecalign_dir}" \
                 --tmp-dir "{params.folder}" --src-lang {LANG1} --trg-lang {LANG2} \
             | pigz -c > "{output}"
         """
