@@ -580,11 +580,10 @@ rule vecalign:
         indices=rules.doc_emb_matches.output,
         plain1=f"{DATADIR}/shards/{LANG1}/{{shard}}/{{src_batch}}/sentences.gz",
         plain2=f"{DATADIR}/shards/{LANG2}/{{shard}}/{{trg_batch}}/sentences.gz",
-        url1=f"{DATADIR}/shards/{LANG1}/{{shard}}/{{src_batch}}/url.gz",
-        url2=f"{DATADIR}/shards/{LANG2}/{{shard}}/{{trg_batch}}/url.gz",
     params:
-        folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}",
+        folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/vecalign",
         workers=THREADS["segalign"],
+        vecalign_dir=f"{WORKFLOW}/../vecalign",
     output:
         temp(
             f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_02.segalign.gz"
@@ -592,17 +591,16 @@ rule vecalign:
     threads: max(THREADS["segalign"], 2)
     shell:
         """
-        mkdir -p {params.folder}
+        mkdir -p "{params.folder}"
         parallel_cmd=""
         if [ {params.workers} -gt 1 ]; then
             parallel_cmd="parallel --gnu --halt 2 --pipe --j {params.workers} -l 1 --group"
         fi
-        cat {input.indices} \
-            | docjoin \
-                -l {input.url1} -r {input.url2} \
-                -l {input.plain1} -r {input.plain2} \
-            | {PROFILING} ${{parallel_cmd}} vecalign --threshold {SEGALIGN_THRESHOLD} \
-            | pigz -c > {output}
+
+        cat <(zcat {input.plain1} | sed "s:$:	-	src:") <(zcat {input.plain2} | sed "s:$:	-	trg:") \
+            | {PROFILING} python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" "{params.vecalign_dir}" \
+                --tmp-dir "{params.folder}" --src-lang {LANG1} --trg-lang {LANG2} \
+            | pigz -c > "{output}"
         """
 
 
