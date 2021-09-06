@@ -583,7 +583,7 @@ rule vecalign:
     params:
         folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/vecalign",
         workers=THREADS["segalign"],
-        vecalign_dir=f"{WORKFLOW}/../vecalign",
+        vecalign_dir=f"{WORKFLOW}/vecalign",
     output:
         temp(
             f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_02.segalign.gz"
@@ -598,8 +598,8 @@ rule vecalign:
         fi
 
         cat <(zcat {input.plain1} | sed "s:$:	-	src:") <(zcat {input.plain2} | sed "s:$:	-	trg:") \
-            | {PROFILING} LASER="{WORKFLOW}/../LASER" python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" "{params.vecalign_dir}" \
-                --tmp-dir "{params.folder}" --src-lang {LANG1} --trg-lang {LANG2} \
+            | {PROFILING} LASER="{WORKFLOW}/LASER" python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" "{params.vecalign_dir}" \
+                --tmp-dir "{params.folder}" --src-lang {LANG1} --trg-lang {LANG2} --nda-input-is-base64 \
             | pigz -c > "{output}"
         """
 

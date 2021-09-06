@@ -57,6 +57,10 @@ if __name__ == "__main__":
             "bitextor": [
                 "Snakefile",
                 "utils/clean-corpus-n.perl",
+                "vecalign/*",
+                "LASER/*",
+                "LASER/*/*",
+                "LASER/*/*/*",
                 "data/*",
             ]
         },

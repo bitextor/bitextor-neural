@@ -69,16 +69,16 @@ def process_nda_output(input_file, output_file, input_is_base64):
             raise Exception("could not parse the columns from the NDA output to int (wrong format?)") from e
 
     # Get the documents
-    file = sys.stdin
+    filein = sys.stdin
     file_open = False
     total_src_files = 0
     total_trg_files = 0
 
     if input_file != "-":
-        file = open(input_file)
+        filein = open(input_file)
         file_open = True
 
-    for line in file:
+    for line in filein:
         line = line.strip().split("\t")
         sentences = []
 
