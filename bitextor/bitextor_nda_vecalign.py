@@ -116,7 +116,7 @@ def process_nda_output(input_file, output_file, input_is_base64):
 def vecalign_overlap(vecalign_dir, sentences_path, overlaps_output_path, overlaps_output_embeddings_path, lang, num_overlaps):
     # Generate overlapping file
     result = subprocess.run([f"{vecalign_dir}/overlap.py", "-i", sentences_path, "-o", overlaps_output_path, "-n", str(num_overlaps)],
-                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                            stdout=subprocess.DEVNULL)
 
     if result.returncode != 0:
         raise Exception(f"something went wrong while generating the overlapping files for Vecalign: return code is {result.returncode}")
@@ -130,7 +130,7 @@ def vecalign_overlap(vecalign_dir, sentences_path, overlaps_output_path, overlap
 
     laser_path = os.environ["LASER"]
     result = subprocess.run([f"{laser_path}/tasks/embed/embed.sh", overlaps_output_path, lang, overlaps_output_embeddings_path],
-                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                            stdout=subprocess.DEVNULL)
 
     if result.returncode != 0:
         raise Exception(f"something went wrong while generating the embeddings for the overlapping files: return code is {result.returncode}")

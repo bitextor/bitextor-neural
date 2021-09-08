@@ -557,7 +557,7 @@ rule doc_emb_matches:
                         --merging-strategy 3 --results-strategy 0 \
                         --emb-optimization-strategy 2 --gen-emb-optimization-strategy 2 \
                         --output-with-idxs --paths-to-docs-are-base64-values \
-                        --threshold {DOC_THRESHOLD} > {output}
+                        --threshold {DOC_THRESHOLD} --logging-level 30 > {output}
         """
 
 
