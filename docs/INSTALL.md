@@ -136,6 +136,24 @@ Additionally, Bitextor uses [giashard](https://github.com/paracrawl/giashard) fo
 go get github.com/paracrawl/giashard/...
 ```
 
+### LASER
+
+[LASER](https://github.com/facebookresearch/LASER) is a library to calculate and use multilingual sentence embeddings. It is the main method to create the necessary embeddings for [Vecalign](https://github.com/thompsonb/vecalign), the neural sentence aligner.
+
+```bash
+export LASER="${PWD}/LASER"
+
+# models
+bash LASER/install_models.sh
+# other dependencies
+bash LASER/install_external_tools.sh
+```
+
+Once you have installed LASER, be aware:
+
+* PyTorch might be necessary to be changed for a version which matches your specific hardware and software (e.g. CUDA driver version).
+* (mecab)[https://github.com/taku910/mecab], the Japonese segmenter, it has not been installed since LASER advice to install it manually. This dependency is optional, and not necessary if you will not process Japonese.
+
 ### Pip dependencies
 
 Furthermore, most of the scripts in Bitextor are written in Python 3. The minimum requirement is Python>=3.7.
@@ -152,34 +170,13 @@ pip3 install --upgrade pip
 # bitextor:
 pip3 install .
 # additional dependencies:
-pip3 install ./bicleaner && pip install ./kenlm --install-option="--max_order 7"
 pip3 install ./bifixer
 pip3 install ./biroamer && python3 -m spacy download en_core_web_sm
 pip3 install ./neural-document-aligner
+pip3 install -r requirements/requirements-laser.txt
 ```
 
 If you don't want to install all Python requirements in `requirements.txt` because you don't expect to run some of Bitextor modules, you can comment those `*.txt` in `requirements.txt` and rerun Bitextor installation.
-
-### LASER
-
-[LASER](https://github.com/facebookresearch/LASER) is a library to calculate and use multilingual sentence embeddings. It is the main method to create the necessary embeddings for (Vecalign)[https://github.com/thompsonb/vecalign], the neural sentence aligner.
-
-```bash
-# python dependencies
-pip3 install -r requirements/requirements-laser.txt
-
-export LASER="${PWD}/LASER"
-
-# models
-bash LASER/install_models.sh
-# other dependencies
-bash LASER/install_external_tools.sh
-```
-
-Once you have installed LASER, be aware:
-
-* PyTorch might be necessary to be changed for a version which matches your specific hardware and software (e.g. CUDA driver version).
-* (mecab)[https://github.com/taku910/mecab], the Japonese segmenter, it has not been installed since LASER advice to install it manually. This dependency is optional, and not necessary if you will not process Japonese.
 
 ### [Optional] Heritrix
 
