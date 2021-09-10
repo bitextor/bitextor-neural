@@ -585,9 +585,7 @@ rule vecalign:
         workers=THREADS["segalign"],
         vecalign_dir=f"{WORKFLOW}/vecalign",
     output:
-        temp(
-            f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_02.segalign.gz"
-        ),
+        f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_02.segalign.gz",
     threads: max(THREADS["segalign"], 2)
     shell:
         """
