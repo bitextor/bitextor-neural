@@ -16,6 +16,3 @@
 [submodule "vecalign"]
 	path = bitextor/vecalign
 	url = https://github.com/bitextor/vecalign
-[submodule "LASER"]
-	path = bitextor/LASER
-	url = https://github.com/facebookresearch/LASER.git
