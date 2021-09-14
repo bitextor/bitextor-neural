@@ -126,6 +126,8 @@ def validate_args(config):
         'morphologicalAnalysers': {'type': 'dict'},
         'pruneThreshold': {'type': 'integer', 'min': 0, 'default': 0},
         'pruneType': {'type': 'string', 'allowed': ['words', 'chars'], 'default': 'words'},
+        # embeddings
+        'embeddingsBatchSizeGPU': {'type': 'integer', 'min': 1, 'default': 32},
         # document alignment
         'lang1': {'type': 'string'},
         'lang2': {'type': 'string'},

@@ -42,6 +42,7 @@ def preprocess_file_content(content, return_list=False):
 def process_nda_output(input_file, output_file, input_is_base64):
     output = []
     src_sentences, trg_sentences = [], []
+    src_urls, trg_urls = [], []
     src_idxs, trg_idxs = set(), set()
 
     # Read the output file
@@ -97,12 +98,14 @@ def process_nda_output(input_file, output_file, input_is_base64):
             # Check if the current sentence is one of the results from the output file
             if total_src_files in src_idxs:
                 src_sentences.extend(sentences)
+                src_urls.extend([line[1]] * len(sentences))
 
             total_src_files += 1
         elif line[2] == "trg":
             # Check if the current sentence is one of the results from the output file
             if total_trg_files in trg_idxs:
                 trg_sentences.extend(sentences)
+                trg_urls.extend([line[1]] * len(sentences))
 
             total_trg_files += 1
         else:
@@ -111,9 +114,9 @@ def process_nda_output(input_file, output_file, input_is_base64):
     if file_open:
         file.close()
 
-    return src_sentences, trg_sentences
+    return src_sentences, trg_sentences, src_urls, trg_urls
 
-def vecalign_overlap(vecalign_dir, sentences_path, overlaps_output_path, overlaps_output_embeddings_path, lang, num_overlaps):
+def vecalign_overlap(vecalign_dir, sentences_path, overlaps_output_path, num_overlaps):
     # Generate overlapping file
     result = subprocess.run([f"{vecalign_dir}/overlap.py", "-i", sentences_path, "-o", overlaps_output_path, "-n", str(num_overlaps)],
                             stdout=subprocess.DEVNULL)
@@ -124,36 +127,24 @@ def vecalign_overlap(vecalign_dir, sentences_path, overlaps_output_path, overlap
     if not os.path.isfile(overlaps_output_path):
         raise Exception(f"overlap file {overlaps_output_path} should exist, but it does not exist")
 
-    # Generate embeddings (LASER)
-    if "LASER" not in os.environ:
-        raise Exception("Envvar LASER is not defined")
-
-    laser_path = os.environ["LASER"]
-    result = subprocess.run([f"{laser_path}/tasks/embed/embed.sh", overlaps_output_path, lang, overlaps_output_embeddings_path],
-                            stdout=subprocess.DEVNULL)
-
-    if result.returncode != 0:
-        raise Exception(f"something went wrong while generating the embeddings for the overlapping files: return code is {result.returncode}")
-
-    if not os.path.isfile(overlaps_output_embeddings_path):
-        raise Exception(f"embedding file {overlaps_output_embeddings_path} should exist, but it does not exist")
-
 def main(args):
     nda_input_path = get_full_path(args.nda_input_path) if args.nda_input_path != "-" else args.nda_input_path
     nda_output_path = get_full_path(args.nda_output_path) if args.nda_output_path != "-" else args.nda_output_path
     vecalign_dir = get_full_path(args.vecalign_dir)
     tmp_dir = args.tmp_dir
     nda_input_is_base64 = args.nda_input_is_base64
-    src_lang = args.src_lang
-    trg_lang = args.trg_lang
     vecalign_num_overlaps = args.vecalign_num_overlaps
     alignment_max_size = args.vecalign_alignment_max_size
+    dim = args.dim
+    embeddings_batch_size = args.embeddings_batch_size
 
     if (nda_input_path == "-" and nda_output_path == "-"):
         raise Exception("you can only pipe either nda input or nda output, not both of them")
 
     nda_src_sentences = f"{tmp_dir}/sentences.src"
     nda_trg_sentences = f"{tmp_dir}/sentences.trg"
+    nda_src_urls = f"{tmp_dir}/urls.src"
+    nda_trg_urls = f"{tmp_dir}/urls.trg"
     vecalign_overlaps_src_path = f"{tmp_dir}/overlaps.src"
     vecalign_overlaps_trg_path = f"{tmp_dir}/overlaps.trg"
     vecalign_overlaps_src_embeddings_path = f"{tmp_dir}/overlaps.emb.src"
@@ -172,24 +163,32 @@ def main(args):
     check_vecalign_files(vecalign_dir)
 
     # Process output from NDA
-    src_sentences, trg_sentences = process_nda_output(nda_input_path, nda_output_path, nda_input_is_base64)
+    src_sentences, trg_sentences, src_urls, trg_urls = process_nda_output(nda_input_path, nda_output_path, nda_input_is_base64)
 
-    # Store sentences
+    # Store sentences and URLs
+    # TODO pipe files instead of write and read
     with open(nda_src_sentences, "w") as file:
         file.write("\n".join(src_sentences) + "\n")
     with open(nda_trg_sentences, "w") as file:
         file.write("\n".join(trg_sentences) + "\n")
+    with open(nda_src_urls, "w") as file:
+        file.write("\n".join(src_urls) + "\n")
+    with open(nda_trg_urls, "w") as file:
+        file.write("\n".join(trg_urls) + "\n")
 
-    # Generate overlapping files and embeddings
-    vecalign_overlap(vecalign_dir, nda_src_sentences, vecalign_overlaps_src_path, vecalign_overlaps_src_embeddings_path, src_lang, vecalign_num_overlaps)
-    vecalign_overlap(vecalign_dir, nda_trg_sentences, vecalign_overlaps_trg_path, vecalign_overlaps_trg_embeddings_path, trg_lang, vecalign_num_overlaps)
+    # Generate overlapping files
+    vecalign_overlap(vecalign_dir, nda_src_sentences, vecalign_overlaps_src_path, vecalign_num_overlaps)
+    vecalign_overlap(vecalign_dir, nda_trg_sentences, vecalign_overlaps_trg_path, vecalign_num_overlaps)
 
-    # Execute vecalign
+    # Execute vecalign (it will generate the embeddings if they do not exist)
+    threshold = ["--threshold", str(args.threshold)] if args.threshold is not None else []
     result = subprocess.run([f"{vecalign_dir}/vecalign.py", "--alignment_max_size", str(alignment_max_size),
                              "--src", nda_src_sentences, "--tgt", nda_trg_sentences,
                              "--src_embed", vecalign_overlaps_src_path, vecalign_overlaps_src_embeddings_path,
                              "--tgt_embed", vecalign_overlaps_trg_path, vecalign_overlaps_trg_embeddings_path,
-                            ])
+                             *threshold, "--embeddings_dim", str(dim), "--urls-format",
+                             "--src-urls", nda_src_urls, "--tgt-urls", nda_trg_urls,
+                             "--embeddings_batch_size", str(embeddings_batch_size)])
 
     if result.returncode != 0:
         raise Exception(f"something went wrong while running vecalign: return code is {result.returncode}")
@@ -206,10 +205,6 @@ def parse_args():
                         help='Path to vecalign directory')
 
     # Other options
-    parser.add_argument('--src-lang', required=True,
-                        help='Lang. of the src documents/sentences')
-    parser.add_argument('--trg-lang', required=True,
-                        help='Lang. of the trg documents/sentences')
     parser.add_argument('--tmp-dir', metavar='PATH', required=True,
                         help='Path to tmp directory')
     parser.add_argument('--nda-input-is-base64', action='store_true',
@@ -220,6 +215,12 @@ def parse_args():
                         help='Number of overlaps to apply to every sentence when using Vecalign. The default value is 4')
     parser.add_argument('--vecalign-alignment-max-size', type=int, default=4,
                         help='Max. size for alignments when using Vecalign. The default value is 4')
+    parser.add_argument('--threshold', type=float, default=None,
+                        help='Threshold for the sentences which Vecalign matches')
+    parser.add_argument('--dim', type=int, default=768,
+                        help='Dimension of the embeddings. The default value is 768')
+    parser.add_argument('--embeddings-batch-size', type=int, default=32,
+                        help='Batch size when generating embeddings with Vecalign. The default value is 32')
 
     args = parser.parse_args()
 

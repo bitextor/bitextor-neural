@@ -1,7 +1,3 @@
-try:
-    import lzma
-except ImportError:
-    from backports import lzma
 #  This file is part of Bitextor.
 #
 #  Bitextor is free software: you can redistribute it and/or modify
@@ -17,6 +13,11 @@ except ImportError:
 #  You should have received a copy of the GNU General Public License
 #  along with Bitextor.  If not, see <https://www.gnu.org/licenses/>.
 
+try:
+    import lzma
+except ImportError:
+    from backports import lzma
+
 import gzip
 from contextlib import contextmanager
 
@@ -24,7 +25,6 @@ import subprocess
 import psutil
 import sys
 import os
-
 
 class ExternalTextProcessor(object):
 
@@ -195,3 +195,25 @@ def snake_no_more_race_set(file_path, value):
 
         return True
     return False
+
+def print_alternatively_lines(input_file="-", blocks=2):
+    input_fd = sys.stdin if input_file == "-" else open(input_file)
+    lines = []
+
+    for line in input_fd:
+        lines.append(line.strip())
+
+    offset = len(lines) // blocks
+
+    if len(lines) % blocks != 0:
+        raise Exception(f"Provided lines mod blocks did not pass: {len(lines)} mod {blocks} != 0")
+
+    for idx in range(len(lines)):
+        if idx >= offset:
+            break
+
+        print(lines[idx])
+        print(lines[idx + offset])
+
+    if input_file == "-":
+        input_fd.close()

@@ -163,6 +163,10 @@ PRUNE_TYPE = f"--prune-type {config['pruneType']}"
 EMPTY_SHARD_CHECK = f"{TMPDIR}/empty_shard"
 
 #################################################################
+# EMBEDDINGS
+EMBEDDINGS_BATCH_SIZE_GPU = config["embeddingsBatchSizeGPU"]
+
+#################################################################
 # DOCALIGN
 DOCALIGN = "neural"
 DOC_THRESHOLD = 0.7
@@ -173,6 +177,11 @@ if "documentAlignerThreshold" in config:
 #################################################################
 # SEGALIGN
 SEGALIGN = config["sentenceAligner"]
+SEGALIGN_THRESHOLD = 0.0
+
+if "sentenceAlignerThreshold" in config:
+    SEGALIGN_THRESHOLD = config["sentenceAlignerThreshold"]
+
 #################################################################
 # CLEANING
 FIELDS = ["url1", "url2", "seg1", "seg2", "aligner"]
@@ -552,12 +561,14 @@ rule doc_emb_matches:
     shell:
         """
         mkdir -p {params.folder}
-        cat <(zcat {input.l1} | sed "s:$:	-	src:") <(zcat {input.l2} | sed "s:$:	-	trg:") | {PROFILING} neural-document-aligner - {params.folder}/emb_src {params.folder}/emb_trg \
-                        --docalign-strategy 'faiss' --weights-strategy 0 \
-                        --merging-strategy 3 --results-strategy 0 \
-                        --emb-optimization-strategy 2 --gen-emb-optimization-strategy 2 \
-                        --output-with-idxs --paths-to-docs-are-base64-values \
-                        --threshold {DOC_THRESHOLD} --logging-level 30 > {output}
+        cat <(zcat {input.l1} | sed "s:$:	-	src:") <(zcat {input.l2} | sed "s:$:	-	trg:") | \
+            {PROFILING} neural-document-aligner - {params.folder}/emb_src {params.folder}/emb_trg \
+                --docalign-strategy 'faiss' --weights-strategy 0 \
+                --merging-strategy 3 --results-strategy 0 \
+                --emb-optimization-strategy 2 --gen-emb-optimization-strategy 2 \
+                --output-with-idxs --paths-to-docs-are-base64-values \
+                --threshold {DOC_THRESHOLD} --logging-level 30 \
+                --embeddings-batch-size {EMBEDDINGS_BATCH_SIZE_GPU} > {output}
         """
 
 
@@ -580,6 +591,8 @@ rule vecalign:
         indices=rules.doc_emb_matches.output,
         plain1=f"{DATADIR}/shards/{LANG1}/{{shard}}/{{src_batch}}/sentences.gz",
         plain2=f"{DATADIR}/shards/{LANG2}/{{shard}}/{{trg_batch}}/sentences.gz",
+        url1=f"{DATADIR}/shards/{LANG1}/{{shard}}/{{src_batch}}/url.gz",
+        url2=f"{DATADIR}/shards/{LANG2}/{{shard}}/{{trg_batch}}/url.gz",
     params:
         folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/vecalign",
         workers=THREADS["segalign"],
@@ -595,10 +608,13 @@ rule vecalign:
             parallel_cmd="parallel --gnu --halt 2 --pipe --j {params.workers} -l 1 --group"
         fi
 
-        cat <(zcat {input.plain1} | sed "s:$:	-	src:") <(zcat {input.plain2} | sed "s:$:	-	trg:") \
-            | {PROFILING} LASER="{WORKFLOW}/LASER" python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" "{params.vecalign_dir}" \
-                --tmp-dir "{params.folder}" --src-lang {LANG1} --trg-lang {LANG2} --nda-input-is-base64 \
-            | pigz -c > "{output}"
+        cat <(zcat "{input.plain1}") <(zcat "{input.plain2}") \
+            <(zcat "{input.url1}" | sed "s:$:\tsrc:") <(zcat "{input.url2}" | sed "s:$:\ttrg:") \
+                | "{WORKFLOW}/utils/print_alternatively_lines_cli.py" 2 | paste - - \
+                | {PROFILING} python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" \
+                    "{params.vecalign_dir}" --tmp-dir "{params.folder}" --nda-input-is-base64 --threshold {SEGALIGN_THRESHOLD} \
+                    --embeddings-batch-size {EMBEDDINGS_BATCH_SIZE_GPU} \
+                | pigz -c > "{output}"
         """
 
 
