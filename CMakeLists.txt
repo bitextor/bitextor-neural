@@ -29,3 +29,7 @@ if (NOT SKIP_BIROAMER)
     add_subdirectory(${PROJECT_SOURCE_DIR}/biroamer fast_align)
 endif()
 
+if (NOT SKIP_KENLM)
+    set(KENLM_MAX_ORDER 7)
+    add_subdirectory(${PROJECT_SOURCE_DIR}/kenlm kenlm)
+endif()

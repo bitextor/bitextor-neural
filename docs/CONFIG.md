@@ -324,9 +324,9 @@ sentenceAlignerThreshold: 0.1
 
 ## Parallel data filtering
 
-Parallel data filtering is carried out with [Bicleaner](https://github.com/bitextor/bicleaner); this tool uses a pre-trained regression model to filter out pairs of segments with a low confidence score.
+Parallel data filtering is carried out with [Bicleaner AI](https://github.com/bitextor/bicleaner-ai); this tool uses a pre-trained regression model to filter out pairs of segments with a low confidence score.
 
-A number of pre-trained models for Bicleaner are available [here](https://github.com/bitextor/bicleaner-data/releases/latest). They are ready to be downloaded and decompressed.
+A number of pre-trained models for Bicleaner AI are available [here](https://github.com/bitextor/bicleaner-ai-data/releases/latest). They are ready to be downloaded and decompressed.
 
 The options required to make it work are:
 
@@ -338,14 +338,14 @@ bicleanerThreshold: 0.6
 * `bicleaner`: path to the YAML configuration file of a pre-trained model
 * `bicleanerThreshold`: threshold to filter low-confidence segment pairs, accepts values in [0,1] range; default is 0.0 (no filtering). It is recommended to set it to values in [0.5,0.7]
 
-If the Bicleaner model is not available, the pipeline will try to train one automatically from the data provided through the config file options `initCorpusTrainingPrefix` and `bicleanerCorpusTrainingPrefix`:
+If the Bicleaner AI model is not available, the pipeline will try to train one automatically from the data provided through the config file options `initCorpusTrainingPrefix` and `bicleanerCorpusTrainingPrefix`:
 
 ```yaml
 initCorpusTrainingPrefix: ['/home/user/Europarl.en-fr.train']
 bicleanerCorpusTrainingPrefix: ['/home/user/RF.en-fr']
 ```
 
-* `initCorpusTrainingPrefix`: prefix to parallel corpus (see [Variables for bilingual lexica](#using-bilingual-lexica)) that will be used to train statistical dictionaries which are part of the Bicleaner model. If `dic` is provided and does not exist, it will be generated; if `dic` is provided and eixts, it should not be replaced, and '`dic`.generated' will be created. If `hunalign` is used, the provided `dic` will be prioritised instead of the generated one
+* `initCorpusTrainingPrefix`: prefix to parallel corpus (see [Variables for bilingual lexica](#using-bilingual-lexica)) that will be used to train statistical dictionaries which are part of the Bicleaner AI model. If `dic` is provided and does not exist, it will be generated; if `dic` is provided and eixts, it should not be replaced, and '`dic`.generated' will be created. If `hunalign` is used, the provided `dic` will be prioritised instead of the generated one
 
 * `bicleanerCorpusTrainingPrefix`: prefix to the parallel corpus that will be used to train the regressor that obtains the confidence score in Bicleaner
 

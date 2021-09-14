@@ -19,3 +19,6 @@
 [submodule "bicleaner-ai"]
 	path = bicleaner-ai
 	url = https://github.com/bitextor/bicleaner-ai
+[submodule "kenlm"]
+	path = kenlm
+	url = https://github.com/kpu/kenlm
