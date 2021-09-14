@@ -16,3 +16,6 @@
 [submodule "vecalign"]
 	path = bitextor/vecalign
 	url = https://github.com/bitextor/vecalign
+[submodule "bicleaner-ai"]
+	path = bicleaner-ai
+	url = https://github.com/bitextor/bicleaner-ai

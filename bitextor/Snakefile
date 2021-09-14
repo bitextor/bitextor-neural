@@ -610,7 +610,7 @@ rule vecalign:
 
         cat <(zcat "{input.plain1}") <(zcat "{input.plain2}") \
             <(zcat "{input.url1}" | sed "s:$:\tsrc:") <(zcat "{input.url2}" | sed "s:$:\ttrg:") \
-                | "{WORKFLOW}/utils/print_alternatively_lines_cli.py" 2 | paste - - \
+                | python3 "{WORKFLOW}/utils/print_alternatively_lines_cli.py" 2 | paste - - \
                 | {PROFILING} python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" \
                     "{params.vecalign_dir}" --tmp-dir "{params.folder}" --nda-input-is-base64 --threshold {SEGALIGN_THRESHOLD} \
                     --embeddings-batch-size {EMBEDDINGS_BATCH_SIZE_GPU} \
@@ -743,7 +743,7 @@ rule bicleaner:
         slang=$(egrep "source_lang" {input.model} | cut -d " " -f 2)
         if [ "$slang" == "{LANG1}" ]; then
             $CAT {input.bifixer} \
-                | {PROFILING} cache -k 3,4 ${{parallel_cmd}} bicleaner-classify-lite --score_only -q - - {input.model} \
+                | {PROFILING} cache -k 3,4 ${{parallel_cmd}} bicleaner-ai-classify-lite --score_only -q - - {input.model} \
                 | paste <($CAT {input.bifixer}) - \
                 | pigz -c > {output}
         else
