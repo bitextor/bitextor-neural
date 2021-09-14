@@ -138,7 +138,7 @@ go get github.com/paracrawl/giashard/...
 
 ### LASER
 
-[LASER](https://github.com/facebookresearch/LASER) is a library to calculate and use multilingual sentence embeddings. It is the main method to create the necessary embeddings for [Vecalign](https://github.com/thompsonb/vecalign), the neural sentence aligner.
+[LASER](https://github.com/facebookresearch/LASER) is a library to calculate and use multilingual sentence embeddings. It is an alternative method to create the necessary embeddings for [Vecalign](https://github.com/thompsonb/vecalign), the neural sentence aligner (by default, embeddings are generated automatically using LaBSE from [Sentence Transformers](https://www.sbert.net/) when the provided paths to the embeddings do not exist).
 
 ```bash
 export LASER="${PWD}/LASER"
@@ -153,6 +153,7 @@ Once you have installed LASER, be aware:
 
 * PyTorch might be necessary to be changed for a version which matches your specific hardware and software (e.g. CUDA driver version).
 * (mecab)[https://github.com/taku910/mecab], the Japonese segmenter, it has not been installed since LASER advice to install it manually. This dependency is optional, and not necessary if you will not process Japonese.
+* It is possible that you might need to change the dimensionality of the loaded embeddings. This will be necessary for Vecalign, but for other tools if you use the non-default embeddings generation method as well.
 
 ### Pip dependencies
 
