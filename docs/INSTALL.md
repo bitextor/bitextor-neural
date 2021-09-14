@@ -154,6 +154,7 @@ Once you have installed LASER, be aware:
 * PyTorch might be necessary to be changed for a version which matches your specific hardware and software (e.g. CUDA driver version).
 * (mecab)[https://github.com/taku910/mecab], the Japonese segmenter, it has not been installed since LASER advice to install it manually. This dependency is optional, and not necessary if you will not process Japonese.
 * It is possible that you might need to change the dimensionality of the loaded embeddings. This will be necessary for Vecalign, but for other tools if you use the non-default embeddings generation method as well.
+* If you use LASER, you might need to generate the embeddings beforehand and locate them in the expected location. Other configuration might be necessary as well.
 
 ### Pip dependencies
 
@@ -174,6 +175,7 @@ pip3 install .
 pip3 install ./bifixer
 pip3 install ./biroamer && python3 -m spacy download en_core_web_sm
 pip3 install ./neural-document-aligner
+# only if you are going to use LASER
 pip3 install -r requirements/requirements-laser.txt
 ```
 
