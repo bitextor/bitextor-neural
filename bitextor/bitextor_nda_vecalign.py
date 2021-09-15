@@ -186,8 +186,8 @@ def main(args):
                              "--src", nda_src_sentences, "--tgt", nda_trg_sentences,
                              "--src_embed", vecalign_overlaps_src_path, vecalign_overlaps_src_embeddings_path,
                              "--tgt_embed", vecalign_overlaps_trg_path, vecalign_overlaps_trg_embeddings_path,
-                             *threshold, "--embeddings_dim", str(dim), "--urls-format",
-                             "--src-urls", nda_src_urls, "--tgt-urls", nda_trg_urls,
+                             *threshold, "--embeddings_dim", str(dim), "--urls_format",
+                             "--src_urls", nda_src_urls, "--tgt_urls", nda_trg_urls,
                              "--embeddings_batch_size", str(embeddings_batch_size)])
 
     if result.returncode != 0:
