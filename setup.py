@@ -58,11 +58,6 @@ if __name__ == "__main__":
                 "Snakefile",
                 "utils/clean-corpus-n.perl",
                 "vecalign/*",
-                "LASER/*",
-                "LASER/*/*",
-                "LASER/*/*/*",
-                "LASER/*/*/*/*",
-                "LASER/*/*/*/*/*",
                 "data/*",
             ]
         },
