@@ -556,7 +556,7 @@ rule doc_emb_matches:
     output:
         f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_01.matches",
     params:
-        folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}",
+        folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/nda",
     threads: THREADS["docalign"]
     shell:
         """

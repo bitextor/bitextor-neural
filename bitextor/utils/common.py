@@ -217,3 +217,17 @@ def print_alternatively_lines(input_file="-", blocks=2):
 
     if input_file == "-":
         input_fd.close()
+
+def get_all_idxs_from_list(l, element):
+    idxs = []
+    find_idx = 0
+
+    while find_idx < len(l):
+        try:
+            idxs.append(l.index(element, find_idx))
+
+            find_idx = idxs[-1] + 1
+        except ValueError:
+            find_idx = len(l)
+
+    return idxs
