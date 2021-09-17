@@ -1,12 +1,12 @@
-# Bitextor installation
+# Bitextor Neural installation
 
-Bitextor can be installed from source.
+Bitextor Neural can be installed from source.
 
 ## Manual installation
 
-Step-by-step Bitextor installation from source.
+Step-by-step Bitextor Neural installation from source.
 
-### Download Bitextor's submodules
+### Download Bitextor Neural's submodules
 
 ```bash
 # if you are cloning from scratch:
@@ -35,7 +35,7 @@ sudo apt install libgoogle-perftools-dev libsparsehash-dev
 
 ### C++ dependencies
 
-Compile and install Bitextor's C++ dependencies:
+Compile and install Bitextor Neural's C++ dependencies:
 
 ```bash
 mkdir build && cd build
@@ -54,7 +54,7 @@ cmake -DSKIP_BIROAMER=ON -DCMAKE_INSTALL_PREFIX=$HOME/.local .. # MGIZA is used 
 
 ### Golang packages
 
-Additionally, Bitextor uses [giashard](https://github.com/paracrawl/giashard) for WARC files preprocessing.
+Additionally, Bitextor Neural uses [giashard](https://github.com/paracrawl/giashard) for WARC files preprocessing.
 
 ```bash
 # build and place the necessary tools in $HOME/go/bin
@@ -63,9 +63,9 @@ go get github.com/paracrawl/giashard/...
 
 ### Pip dependencies
 
-Furthermore, most of the scripts in Bitextor are written in Python 3. The minimum requirement is Python>=3.7.
+Furthermore, most of the scripts in Bitextor Neural are written in Python 3. The minimum requirement is Python>=3.7.
 
-Some additional Python libraries are required. They can be installed automatically with `pip`. We recommend using a virtual environment to manage Bitextor installation.
+Some additional Python libraries are required. They can be installed automatically with `pip`. We recommend using a virtual environment to manage Bitextor Neural installation.
 
 ```bash
 # create virtual environment & activate
@@ -74,7 +74,7 @@ source /path/to/virtual/environment/bin/activate
 
 # install dependencies in virtual enviroment
 pip3 install --upgrade pip
-# bitextor:
+# Bitextor Neural:
 pip3 install .
 # additional dependencies:
 pip3 install ./bifixer
@@ -83,11 +83,11 @@ pip3 install ./neural-document-aligner
 pip3 install ./bicleaner-ai && pip install ./kenlm --install-option="--max_order 7"
 ```
 
-If you don't want to install all Python requirements in `requirements.txt` because you don't expect to run some of Bitextor modules, you can comment those `*.txt` in `requirements.txt` and rerun Bitextor installation.
+If you don't want to install all Python requirements in `requirements.txt` because you don't expect to run some of Bitextor Neural modules, you can comment those `*.txt` in `requirements.txt` and rerun Bitextor Neural installation.
 
 ### Some known installation issues
 
-1. Depending on the version of *libboost* that you are using given a certain OS version or distribution package from your package manager, you may experience some problems when compiling some of the sub-modules included in Bitextor. If this is the case you can install it manually by running the following commands:
+1. Depending on the version of *libboost* that you are using given a certain OS version or distribution package from your package manager, you may experience some problems when compiling some of the sub-modules included in Bitextor Neural. If this is the case you can install it manually by running the following commands:
 
 ```bash
 sudo apt-get remove libboost-all-dev
