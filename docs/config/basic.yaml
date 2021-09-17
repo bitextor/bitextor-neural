@@ -8,7 +8,6 @@ tempDir: ~/transient
 warcs: ["/home/lpla/data/warc/greenpeace.original.warc.gz"] # contains a domain to crawl per line
 
 # PREPROCESSING
-preprocessor: "warc2text"
 shards: 8 # 2^8 = 256 shards
 batches: 1024 # each shard split into chunks of 1024 MB
 
@@ -17,10 +16,6 @@ lang2: 'fr'
 
 # ALIGN
 documentAlignerThreshold: 0.7
-alignerCmd: "bash /home/lpla/bitextor-neural/bitextor/example/dummy-translate.sh"
-translationDirection: fr2en
-
-sentenceAligner: 'vecalign'
 sentenceAlignerThreshold: 0.1
 
 # CLEANING

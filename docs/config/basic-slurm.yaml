@@ -13,11 +13,11 @@ shard:
     output: "/home/%u/slurm-logs/{rule}_{wildcards.lang}.%j.out"
     time: "36:00:00"
 
-mt_matches:
+doc_emb_matches:
     mem: "10G"
     time: "8:00:00"
 
-bleualign:
+vecalign:
     mem: "10G"
     time: "8:00:00"
 

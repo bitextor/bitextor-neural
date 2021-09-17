@@ -66,64 +66,25 @@ def validate_args(config):
             'valuesrules': {'type': 'integer', 'min': 1}
         },
         # data definition
-        # TODO: check that one of these is specified?
-        'hosts': {'type': 'list', 'dependencies': 'crawler'},
-        'hostsFile': {'type': 'string', 'dependencies': 'crawler', 'check_with': isfile},
+        'hosts': {'type': 'list'},
+        'hostsFile': {'type': 'string', 'check_with': isfile},
         'warcs': {'type': 'list', 'check_with': isfile},
         'warcsFile': {'type': 'string', 'check_with': isfile},
         # crawling
-        'crawler': {'type': 'string', 'allowed': ["wget", "heritrix", "linguacrawl"]},
-        'crawlTimeLimit': {'type': 'string', 'dependencies': 'crawler'},
-        'crawlerUserAgent': {'type': 'string', 'dependencies': {'cralwer': ['wget', 'linguacrawl']}},
-        'crawlWait': {'type': 'string', 'dependencies': {'crawler': ['wget', 'linguacrawl']}},
-        'crawlFileTypes': {'type': 'string', 'dependencies': {'crawler': ['wget', 'linguacrawl']}},
-        'crawlTLD': {'type': 'boolean', 'dependencies': {'crawler': ['linguacrawl']}},
-        'crawlSizeLimit': {'type': 'string', 'dependencies': {'crawler': ['linguacrawl']}},
-        'crawlCat': {'type': 'boolean', 'dependencies': {'crawler': 'linguacrawl'}},
-        'crawlCatMaxSize': {'type': 'integer', 'dependencies': {'crawlCat': True}},
-        'crawlMaxFolderTreeDepth': {'type': 'string', 'dependencies': {'crawler': 'linguacrawl'}},
-        'crawlScoutSteps': {'type': 'string', 'dependencies': {'crawler': 'linguacrawl'}},
-        'crawlBlackListURL': {'type': 'list', 'check_with': isstrlist, 'dependencies': {'crawler': 'linguacrawl'}},
-        'crawlPrefixFilter': {'type': 'list', 'check_with': isstrlist, 'dependencies': {'crawler': 'linguacrawl'}},
-        'crawlerNumThreads': {'type': 'string', 'dependencies': {'crawler': ['linguacrawl']}},
-        'crawlerConnectionTimeout': {'type': 'string', 'dependencies': {'crawler': ['linguacrawl']}},
-        'dumpCurrentCrawl': {'type': 'string', 'dependencies': {'crawler': ['linguacrawl']}},
-        'resumePreviousCrawl': {'type': 'string', 'dependencies': {'crawler': ['linguacrawl']}},
-        'heritrixPath': {'type': 'string', 'dependencies': {'crawler': 'heritrix'}},
-        'heritrixUrl': {'type': 'string', 'dependencies': {'crawler': 'heritrix'}},
-        'heritrixUser': {'type': 'string', 'dependencies': {'crawler': 'heritrix'}},
+        'crawlTimeLimit': {'type': 'string'},
+        'crawlerUserAgent': {'type': 'string'},
+        'crawlWait': {'type': 'string'},
+        'crawlFileTypes': {'type': 'string'},
         # preprocessing
-        'preprocessor': {'type': 'string', 'allowed': ['warc2text', 'warc2preprocess'], 'default': 'warc2text'},
         'langs': {'type': 'list'},
         'shards': {'type': 'integer', 'min': 0, 'default': 8},
         'batches': {'type': 'integer', 'min': 1, 'default': 1024},
         # specific to warc2text:
-        'writeHTML': {'type': 'boolean', 'dependencies': {'preprocessor': ['warc2text']}},
-        # specific to warc2preprocess:
-        'cleanHTML': {'type': 'boolean', 'dependencies': {'preprocessor': 'warc2preprocess'}},
-        'ftfy': {'type': 'boolean', 'dependencies': {'preprocessor': 'warc2preprocess'}},
-        'langID': {
-            'type': 'string',
-            'allowed': ['cld2', 'cld3'],
-            'dependencies': {'preprocessor': 'warc2preprocess'}
-        },
-        'parser': {
-            'type': 'string',
-            'allowed': ['bs4', 'modest', 'simple', 'lxml'],
-            'dependencies': {'preprocessor': 'warc2preprocess'}
-        },
-        'boilerpipeCleaning': {'type': 'boolean', 'dependencies': {'preprocessor': 'warc2preprocess'}},
-        'html5lib': {'type': 'boolean', 'dependencies': {'preprocessor': 'warc2preprocess'}},
-        # pdfEXTRACT
-        'PDFextract': {'type': 'boolean', 'dependencies': {'preprocessor': 'warc2preprocess'}},
-        'PDFextract_configfile': {'type': 'string', 'dependencies': 'PDFextract'},
-        'PDFextract_sentence_join_path': {'type': 'string', 'dependencies': 'PDFextract'},
-        'PDFextract_kenlm_path': {'type': 'string', 'dependencies': 'PDFextract'},
+        'writeHTML': {'type': 'boolean'},
         # tokenization
         'sentenceSplitters': {'type': 'dict'},
         'customNBPs': {'type': 'dict'},
         'wordTokenizers': {'type': 'dict'},
-        'morphologicalAnalysers': {'type': 'dict'},
         'pruneThreshold': {'type': 'integer', 'min': 0, 'default': 0},
         'pruneType': {'type': 'string', 'allowed': ['words', 'chars'], 'default': 'words'},
         # embeddings
@@ -131,30 +92,15 @@ def validate_args(config):
         # document alignment
         'lang1': {'type': 'string'},
         'lang2': {'type': 'string'},
-        'documentAligner': {
-            'type': 'string',
-            'allowed': ['DIC', 'externalMT'],
-            'default': 'externalMT',
-            'dependencies': {}
-        },
-        # mt
-        'alignerCmd': {'type': 'string', 'dependencies': {'documentAligner': 'externalMT'}},
-        'translationDirection': {'type': 'string', 'dependencies': {'documentAligner': 'externalMT'}},
-        'documentAlignerThreshold': {'type': 'float', 'dependencies': {'documentAligner': 'externalMT'}},
-        # dictionary
-        'dic': {'type': 'string', 'dependencies': {}},
-        'initCorpusTrainingPrefix': {'type': 'list'},
+        'documentAlignerThreshold': {'type': 'float'},
         # sentence alignment
-        'sentenceAligner': {'type': 'string', 'allowed': ['vecalign'], 'default': 'vecalign'},
         'sentenceAlignerThreshold': {'type': 'float'},
         # post processing
-        'deferred': {'type': 'boolean', 'default': False},
         'bifixer': {'type': 'boolean', 'default': False},
         # mark near duplicates as duplicates
         'aggressiveDedup': {'type': 'boolean', 'dependencies': {'bifixer': True}},
         'bicleaner': {'type': 'string'},
         'bicleanerThreshold': {'type': 'float', 'dependencies': 'bicleaner'},
-        'bicleanerCorpusTrainingPrefix': {'type': 'list'},
         'elrc': {'type': 'boolean'},
         'tmx': {'type': 'boolean'},
         'deduped': {'type': 'boolean'},
@@ -163,15 +109,6 @@ def validate_args(config):
         'biroamerMixFiles': {'type': 'list', 'check_with': isfile, 'dependencies': {'biroamer': True}},
         'biroamerImproveAlignmentCorpus': {'type': 'string', 'check_with': isfile, 'dependencies': {'biroamer': True}}
     }
-
-    if 'crawler' in config:
-        if config['crawler'] == 'heritrix':
-            schema['heritrixPath']['required'] = True
-        elif config['crawler'] == 'linguacrawl':
-            schema['dumpCurrentCrawl']['type'] = 'boolean'
-            schema['crawlTLD']['type'] = 'list'
-            schema['crawlTLD']['check_with'] = isstrlist
-            schema['resumePreviousCrawl']['type'] = 'boolean'
 
     untilPreprocess = False
     untilCrawling = False
@@ -188,33 +125,6 @@ def validate_args(config):
     elif untilPreprocess and not bothLangsSpecified:
         schema['langs']['required'] = True
 
-    if "documentAligner" not in config or config['documentAligner'] == 'externalMT':
-        schema['alignerCmd']['required'] = True
-
-        if bothLangsSpecified:
-            schema['translationDirection']['allowed'] = [
-                f'{config["lang1"]}2{config["lang2"]}',
-                f'{config["lang2"]}2{config["lang1"]}']
-
-        if "sentenceAligner" in config and config["sentenceAligner"] == "hunalign":
-            schema['dic']['required'] = True
-
-    elif config['documentAligner'] == 'DIC':
-        schema['dic']['required'] = True
-        schema['documentAligner']['dependencies']['preprocessor'] = ['warc2preprocess', 'warc2text']
-
-        if config['preprocessor'] == 'warc2text':
-            config['writeHTML'] = True
-
-    if "sentenceAligner" not in config or config['sentenceAligner'] == 'vecalign':
-        # schema['sentenceAligner']['dependencies'] = frozenset({'documentAligner': 'externalMT'})
-        # dependencies are not working because of the frozenset
-        schema['sentenceAligner']['dependencies'] = {'documentAligner': 'externalMT'}
-
-    if "deferred" in config:
-        schema['until']['allowed'].append('deferred')
-        schema['parallelWorkers']['allowed'].append('deferred')
-
     if 'bifixer' in config:
         schema['until']['allowed'].append('bifixer')
         schema['parallelWorkers']['allowed'].append('bifixer')
@@ -222,18 +132,6 @@ def validate_args(config):
     if 'bicleaner' in config:
         schema['until']['allowed'].append('bicleaner')
         schema['parallelWorkers']['allowed'].append('bicleaner')
-
-        if not os.path.isfile(os.path.expanduser(config['bicleaner'])):
-            schema['bicleanerCorpusTrainingPrefix']['required'] = True
-            schema['initCorpusTrainingPrefix']['required'] = True
-            schema['dic']['required'] = True
-
-    if 'dic' in config and not os.path.isfile(os.path.expanduser(config['dic'])):
-        # if 'dic' in config and does not exist, we need to generate a new dictionary
-        schema['initCorpusTrainingPrefix']['required'] = True
-
-    if 'initCorpusTrainingPrefix' in config:
-        schema['dic']['required'] = True
 
     if 'until' in config and (config['until'] == 'filter' or config['until'] == 'bifixer'):
         print(
@@ -253,11 +151,6 @@ def validate_args(config):
                 # deduped in config but false and (tmx not in config or tmx in config and false)
                 # debuped as default value in both situations
                 schema['biroamer']['dependencies'] = {'deduped': True}
-        if 'deferred' in config and config['deferred']:
-            if isinstance(schema['biroamer']['dependencies'], dict):
-                schema['biroamer']['dependencies']['deferred'] = False
-            else:
-                schema['biroamer']['dependencies'] = {'deferred': False}
 
     v = Validator(schema)
     b = v.validate(config)

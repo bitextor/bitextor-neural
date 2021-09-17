@@ -45,116 +45,33 @@ if "profiling" in config and config["profiling"]:
 #################################################################
 # CRAWLING
 CRAWLTARGET = "wget"
-TLD_CRAWL = ""
 USERAGENT = ""
-CRAWLSIZELIMIT = ""
 CRAWLTIMELIMIT = ""
 CRAWLWAIT = ""
-CRAWLPAGELIMIT = ""
 CRAWLFILETYPES = "-f html,pdf"
-CRAWLJOBS = "-j 2"
-CRAWLTIMEOUT = ""
-CRAWLDUMPARGS = ""
-CONTINUECRAWL = ""
-CRAWLMAXFOLDERTREEDEPTH = ""
-CRAWLSCOUTSTEPS = ""
-CRAWLBLACKLISTURL = (
-    "['wordpress','blogspot','facebook','google','wikipedia','youtube','perehodi','twitter','instagram']"
-)
-CRAWLPREFIXFILTER = "['mailto:']"
 
-if "crawler" in config:
-    CRAWLTARGET = config["crawler"]
-
-if "crawlTLD" in config and config["crawlTLD"]:
-    TLD_CRAWL = "-D"
 if "crawlerUserAgent" in config:
     USERAGENT = f'-a "{config["crawlerUserAgent"]}"'
-if "crawlSizeLimit" in config:
-    CRAWLSIZELIMIT = f'-s {config["crawlSizeLimit"]}'
 if "crawlTimeLimit" in config:
     CRAWLTIMELIMIT = f'-t {config["crawlTimeLimit"]}'
 if "crawlWait" in config:
     CRAWLWAIT = f'--wait {config["crawlWait"]}'
 if "crawlFileTypes" in config:
     CRAWLFILETYPES = f'-f {config["crawlFileTypes"]}'
-if "crawlerNumThreads" in config:
-    CRAWLJOBS = f'-j {config["crawlerNumThreads"]}'
-if "crawlerConnectionTimeout" in config:
-    CRAWLTIMEOUT = f'-o {config["crawlerConnectionTimeout"]}'
-if "dumpCurrentCrawl" in config:
-    CRAWLDUMPARGS = f'-d {config["dumpCurrentCrawl"]}'
-if "resumePreviousCrawl" in config:
-    CONTINUECRAWL = f'-l {config["resumePreviousCrawl"]}'
-if "crawlMaxFolderTreeDepth" in config:
-    CRAWLMAXFOLDERTREEDEPTH = config["crawlMaxFolderTreeDepth"]
-if "crawlScoutSteps" in config:
-    CRAWLSCOUTSTEPS = config["crawlScoutSteps"]
-if "crawlBlackListURL" in config:
-    CRAWLBLACKLISTURL = str(config["crawlBlackListURL"])
-if "crawlPrefixFilter" in config:
-    CRAWLPREFIXFILTER = str(config["crawlPrefixFilter"])
 
 #################################################################
 # PREPROCESS
 PPROC = "warc2text"
 PPROC_FILES = ["text.gz", "url.gz", "mime.gz"]
 TEXT_FILE = "text.gz"
-HTML_FILE = ""
-if "writeHTML" in config and config["writeHTML"]:
-    HTML_FILE = "html.gz"
-    PPROC_FILES.append("html.gz")
 
 SHARDS = config["shards"]
 BATCHES = config["batches"]
-
-CLEANHTML = ""
-FTFY = ""
-LANGID = "cld2"
-PARSER = ""
-BOILERPIPE = ""
-PDFEXTRACT = ""
-HTML5LIB = ""
-
-if "cleanHTML" in config and config["cleanHTML"]:
-    CLEANHTML = "--cleanhtml"
-if "ftfy" in config and config["ftfy"]:
-    FTFY = "--ftfy"
-if "langID" in config:
-    LANGID = config["langID"]
-if "parser" in config:
-    PARSER = f"--parser {config['parser']}"
-if "boilerpipeCleaning" in config and config["boilerpipeCleaning"] == True:
-    BOILERPIPE = "--boilerpipe"
-if "PDFextract" in config and config["PDFextract"]:
-    PDFEXTRACT = "--pdfextract "
-    if "PDFextract_configfile" in config and config["PDFextract_configfile"]:
-        PDFEXTRACT += " --pe_configfile " + config["PDFextract_configfile"]
-    if "PDFextract_sentence_join_path" in config and config["PDFextract_sentence_join_path"]:
-        PDFEXTRACT += " --sentence_join_path " + config["PDFextract_sentence_join_path"]
-    if "PDFextract_kenlm_path" in config and config["PDFextract_kenlm_path"]:
-        PDFEXTRACT += " --kenlm_path " + config["PDFextract_kenlm_path"]
-if "html5lib" in config and config["html5lib"]:
-    HTML5LIB = "--html5lib"
 
 # sentence splitting and tokenisation
 SENTTOKS = {} if not "sentenceSplitters" in config else config["sentenceSplitters"]
 CUSTOMNBPS = {} if not "customNBPs" in config else config["customNBPs"]
 WORDTOKS = {} if not "wordTokenizers" in config else config["wordTokenizers"]
-MORPHTOKS = {} if not "morphologicalAnalysers" in config else config["morphologicalAnalysers"]
-
-# Concrete tokenizers and morph. tokenizers
-if WORDTOKS:
-    WORDTOK1 = get_lang_or_default(WORDTOKS, LANG1)
-    WORDTOK2 = get_lang_or_default(WORDTOKS, LANG2)
-else:
-    # TODO: decide where to put this
-    WORDTOK1, WORDTOK2 = (
-        f"{WORKFLOW}/data/moses/tokenizer/tokenizer.perl -q -b -a -l {LANG1}",
-        f"{WORKFLOW}/data/moses/tokenizer/tokenizer.perl -q -b -a -l {LANG2}",
-    )
-MORPHTOK1 = get_lang_or_default(MORPHTOKS, LANG1)
-MORPHTOK2 = get_lang_or_default(MORPHTOKS, LANG2)
 
 PRUNE_THRESHOLD = f"--prune {config['pruneThreshold']}"
 PRUNE_TYPE = f"--prune-type {config['pruneType']}"
@@ -176,7 +93,7 @@ if "documentAlignerThreshold" in config:
 
 #################################################################
 # SEGALIGN
-SEGALIGN = config["sentenceAligner"]
+SEGALIGN = "vecalign"
 SEGALIGN_THRESHOLD = 0.0
 
 if "sentenceAlignerThreshold" in config:
@@ -185,7 +102,6 @@ if "sentenceAlignerThreshold" in config:
 #################################################################
 # CLEANING
 FIELDS = ["url1", "url2", "seg1", "seg2", "aligner"]
-MMHSUM_PATH = ""
 BIFIXER = False
 BIFIXER_FIELDS = []
 AGGRESSIVE_DEDUP = "--aggressive_dedup"
@@ -203,7 +119,6 @@ BIROAMER_ALIGNMENT_CORPUS = ""
 BIROAMER_OMIT = ""
 # TODO: add rawCorpus option to generate lang1-lang2.raw.gz
 OUTPUT_FILES = ["sent", "raw"]
-BICLEANER_TRAIN_PREFIXES = None
 
 if "bifixer" in config and config["bifixer"]:
     BIFIXER = True
@@ -217,8 +132,6 @@ if "bicleaner" in config:
     BICLEANER_FIELDS = ["bicleaner"]
 if "bicleanerThreshold" in config:
     BICLEANER_THRESHOLD = config["bicleanerThreshold"]
-if "bicleanerCorpusTrainingPrefix" in config:
-    BICLEANER_TRAIN_PREFIXES = config["bicleanerCorpusTrainingPrefix"]
 if "elrc" in config and config["elrc"]:
     ELRC = True
     ELRC_FIELDS = ["lengthratio", "numTokensSL", "numTokensTL"]
@@ -251,6 +164,7 @@ TMX_FIELDS = BEFORE_ELRC_FIELDS + ELRC_FIELDS
 
 FILTER_SORT_FIELDS = "-k3,4"
 TMX_DEDUP_FIELDS = "seg1,seg2"
+
 if "bifixerhash" in BEFORE_ELRC_FIELDS:
     i = BEFORE_ELRC_FIELDS.index("bifixerhash")
     i = i + 1  # sort counts from 1, not 0

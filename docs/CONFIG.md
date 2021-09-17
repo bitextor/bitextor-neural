@@ -66,29 +66,19 @@ warcsFile: ~warcs.gz
 
 ## Crawling
 
-Three crawlers are supported by Bitextor: [Heritrix](https://github.com/internetarchive/heritrix3), `wget` tool and [linguacrawl](https://github.com/transducens/linguacrawl/). The basic options are:
+There are different options supported in order to configure the crawler. Specificaly, the only crawler supported is `wget`. `wget` will launch a crawling job for each specified host, which will be finished either when there is nothing more to download or the specified time limit has been reached. The following parameters may be configured when using this tool:
 
 ```yaml
-crawler: wget
 crawlTimeLimit: 1h
-```
-
-* `crawler`: set which crawler is used (`heritrix`, `wget` or `linguacrawl`)
-* `crawlTimeLimit`: time for which a website can be crawled; the format of this field is an integer number followed by a suffix indicating the units (accepted units are s(seconds), m(minutes), h(hours), d(days), w(weeks)), for example: `86400s`, or `1440m` or `24h`, or `1d`
-
-### wget
-
-`wget` is the most basic of the provided crawling tools, it will launch a crawling job for each specified host, which will be finished either when there is nothing more to download or the specified time limit has been reached. The following parameters may be configured when using this tool:
-
-```yaml
-crawlUserAgent: "Mozilla/5.0 (compatible; Bitextor/8 +https://github.com/bitextor/bitextor)"
+crawlerUserAgent: "Mozilla/5.0 (compatible; Bitextor/8 +https://github.com/bitextor/bitextor)"
 crawlWait: 5
 crawlFileTypes: ["html", "pdf"]
 ```
 
-* `crawlerUserAgent`: [user agent](https://developers.whatismybrowser.com/useragents/explore/software_type_specific/crawler/) to be added to the header of the crawler when doing requests to a web server (identifies your crawler when downloading a website)
-* `crawlWait`: time (in seconds) that should be waited between the retrievals; it is intended to avoid a web-site to cut the connection of the crawler due too many connections in a low interval of time
-* `crawlFileTypes`: filetypes that sould be retrieved; `wget` will check the extension of the document
+* `crawlTimeLimit`: time for which a website can be crawled; the format of this field is an integer number followed by a suffix indicating the units (accepted units are s(seconds), m(minutes), h(hours), d(days), w(weeks)), for example: `86400s`, or `1440m` or `24h`, or `1d`.
+* `crawlerUserAgent`: [user agent](https://developers.whatismybrowser.com/useragents/explore/software_type_specific/crawler/) to be added to the header of the crawler when doing requests to a web server (identifies your crawler when downloading a website).
+* `crawlWait`: time (in seconds) that should be waited between the retrievals; it is intended to avoid a web-site to cut the connection of the crawler due too many connections in a low interval of time.
+* `crawlFileTypes`: filetypes that sould be retrieved; `wget` will check the extension of the document.
 
 ## Preprocessing and sharding
 
