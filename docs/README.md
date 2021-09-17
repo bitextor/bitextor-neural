@@ -17,38 +17,39 @@ Bitextor can be installed via Docker, Conda or built from source. See [instructi
 ## Usage
 
 ```text
-usage: bitextor [-C FILE [FILE ...]] [-c KEY=VALUE [KEY=VALUE ...]]
-                [-j JOBS] [-k] [--notemp] [--dry-run]
-                [--forceall] [--forcerun [TARGET [TARGET ...]]]
-                [-q] [-h]
+usage: bitextor-neural [-C FILE [FILE ...]] [-c KEY=VALUE [KEY=VALUE ...]]
+                       [-j JOBS] [-k] [--notemp] [--dry-run] [--forceall]
+                       [--forcerun TARGET [TARGET ...]] [-q] [-h]
 
 launch Bitextor
 
-Bitextor config::
+Bitextor config:
   -C FILE [FILE ...], --configfile FILE [FILE ...]
                         Bitextor YAML configuration file
   -c KEY=VALUE [KEY=VALUE ...], --config KEY=VALUE [KEY=VALUE ...]
                         Set or overwrite values for Bitextor config
 
-Optional arguments::
+Optional arguments:
   -j JOBS, --jobs JOBS  Number of provided cores
   -k, --keep-going      Go on with independent jobs if a job fails
-  --notemp              Disable deletion of intermediate files marked as temporary
+  --notemp              Disable deletion of intermediate files marked as
+                        temporary
   --dry-run             Do not execute anything and display what would be done
   --forceall            Force rerun every job
   --forcerun TARGET [TARGET ...]
-                        List of files and rules that shall be re-created/re-executed
+                        List of files and rules that shall be re-created/re-
+                        executed
   -q, --quiet           Do not print job information
   -h, --help            Show this help message and exit
 ```
 
 ## Advanced usage
 
-Bitextor uses [Snakemake](https://snakemake.readthedocs.io/en/stable/index.html) to define Bitextor's workflow and manage its execution. Snakemake provides a lot of flexibility in terms of configuring the execution of the pipeline. For advanced users that want to make the most out of this tool, `bitextor-full` command is provided that calls Snakemake CLI with Bitextor's workflow and exposes all of Snakemake's parameters.
+Bitextor uses [Snakemake](https://snakemake.readthedocs.io/en/stable/index.html) to define Bitextor's workflow and manage its execution. Snakemake provides a lot of flexibility in terms of configuring the execution of the pipeline. For advanced users that want to make the most out of this tool, `bitextor-neural-full` command is provided that calls Snakemake CLI with Bitextor's workflow and exposes all of Snakemake's parameters.
 
 ### Execution on a cluster
 
-To run Bitextor on a cluster with a software that allows to manage job queues, it is recommended to use `bitextor-full` command and use [Snakemake's cluster configuration](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles).
+To run Bitextor on a cluster with a software that allows to manage job queues, it is recommended to use `bitextor-neural-full` command and use [Snakemake's cluster configuration](https://snakemake.readthedocs.io/en/stable/executing/cli.html#profiles).
 
 ## Bitextor configuration
 
@@ -65,8 +66,8 @@ Bitextor generates the final parallel corpora in multiple formats. These files w
 * `{lang1}-{lang2}.not-deduped.tmx.gz` - generated if `tmx: true`
 * `{lang1}-{lang2}.deduped.tmx.gz` - generated if `dedup: true`
 * `{lang1}-{lang2}.deduped.txt.gz` - generated if `dedup: true`
-* `{lang1}-{lang2}.deduped.roamed.tmx.gz` - generated if `biroamer: true` and `dedup: true`
-* `{lang1}-{lang2}.not-deduped.roamed.tmx.gz` - generated `biroamer: true`, `tmx: true`
+* `{lang1}-{lang2}.deduped-roamed.tmx.gz` - generated if `biroamer: true` and `dedup: true`
+* `{lang1}-{lang2}.not-deduped-roamed.tmx.gz` - generated `biroamer: true`, `tmx: true`
 and `dedup: false`
 
 See [detailed description](OUTPUT.md) of the output files.
@@ -77,18 +78,11 @@ Bitextor is a pipeline that runs a collection of scripts to produce a parallel c
 
 1. **Crawling**: documents are downloaded from the specified websites
 2. **Pre-processing**: downloaded documents are normalized, boilerplates are removed, plain text is extracted, and language is identified
-3. **Document alignment**: parallel documents are identified. Two strategies are implemented for this stage:
-    * one using bilingual lexica and a collection of features extracted from HTML; a linear regressor combines these resources to produce a score in [0,1], and
-    * another using machine translation and a [TF/IDF](https://en.wikipedia.org/wiki/Tf%E2%80%93idf) strategy to score document pairs
-4. **Segment alignment**: each pair of documents is processed to identify parallel segments. Again, two strategies are implemented:
-    * one using the tool [Hunalign](http://mokk.bme.hu/resources/hunalign/), and
-    * another using [Bleualign](https://github.com/rsennrich/Bleualign), that can only be used if the MT-based-document-alignment strategy is used (machine translations are used for both methods)
-5. **Post-processing**: final steps that allow to clean the parallel corpus obtained using the tool [Bicleaner](https://github.com/bitextor/bicleaner), deduplicates translation units, and computes additional quality metrics
+3. **Document alignment**: parallel documents are identified. The main implemented strategy is based on neural technologies, and specificaly, [Neural Document Aligner](https://github.com/bitextor/neural-document-aligner/) (NDA) is applied. The NDA uses sentence-level embeddings and transform them to document-level embeddings in order to calculate a score which will be used to match the documents.
+4. **Segment alignment**: each pair of documents is processed to identify parallel segments. Again, the main implemented strategy is based on neural technologies, and specificaly, [Vecalign](https://github.com/bitextor/vecalign) is applied. Vecalign uses sentence-level embeddings, and with them, it applies different strategies to apply an optimized edit distance which allows to obtain matches among the sentences from 1-many, many-1 and many-many.
+5. **Post-processing**: final steps that allow to clean the parallel corpus obtained using the tool [Bicleaner AI](https://github.com/bitextor/bicleaner-ai), deduplicates translation units, and computes additional quality metrics. Also, Bicleaner AI uses neural technologies, and there are available [lite and full models](https://github.com/bitextor/bicleaner-ai-data/releases) pre-trained.
 
-The following diagram shows the structure of the pipeline and the different scripts that are used in each stage:
-
-![Banner](img/bitextor.png)
-
+___
 ![Connecting Europe Facility](img/logo_en_cef273x39_nonalpha.png)
 
 All documents and software contained in this repository reflect only the authors' view. The Innovation and Networks Executive Agency of the European Union is not responsible for any use that may be made of the information it contains.

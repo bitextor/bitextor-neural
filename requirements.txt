@@ -8,3 +8,4 @@ sentence-splitter==1.4
 mosestokenizer==1.1.0
 setuptools==57.1.0
 validators==0.18.2
+warcio==1.7.4

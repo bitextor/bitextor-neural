@@ -26,12 +26,13 @@ download_dictionary()
 
 download_bicleaner_model()
 {
-    base="https://github.com/bitextor/bicleaner-data/releases/latest/download"
+    base="https://github.com/bitextor/bicleaner-ai-data/releases/latest/download"
     langs=$1
     output=$2
-    if [ ! -f "${output}/${langs}.tar.gz" ]; then
-        wget -q "${base}/${langs}.tar.gz" -P "${output}"
-        tar xzf "${output}/${langs}.tar.gz" -C "${output}"
+    filename="full-${langs}.tgz"
+    if [ ! -f "${output}/${filename}" ]; then
+        wget -q "${base}/${filename}" -P "${output}"
+        tar xzf "${output}/${filename}" -C "${output}"
     fi
 }
 

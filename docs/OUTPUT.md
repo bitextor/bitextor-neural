@@ -54,5 +54,5 @@ Bitextor may also perform the deduplication of the generated corpus (enabled via
 
 If Biroamer is enabled `biroamer: true`, Bitextor will also produce a ROAMed version of the corpus, according to Biroamer [config](CONFIG.md#post-processing). Biroamer will produce either of these files, depending on `tmx` and `dedup` parameters:
 
-* `{lang1}-{lang2}.deduped.roamed.tmx.gz`: **ROAMed** version of the **deduplicated** corpus in **TMX** format, that will be generated if `dedup` is true
-* `{lang1}-{lang2}.not-deduped.roamed.tmx.gz`: **ROAMed** version of the corpus without deduplication in **TMX** format, that will be generated if `tmx` is enabled, but not `dedup`
+* `{lang1}-{lang2}.deduped-roamed.tmx.gz`: **ROAMed** version of the **deduplicated** corpus in **TMX** format, that will be generated if `dedup` is true
+* `{lang1}-{lang2}.not-deduped-roamed.tmx.gz`: **ROAMed** version of the corpus without deduplication in **TMX** format, that will be generated if `tmx` is enabled, but not `dedup`
