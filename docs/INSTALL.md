@@ -101,4 +101,4 @@ cd ..
 rm -rf boost_1_76_0*
 ```
 
-2. There are dependencies that are GPU-dependent, and this might be a problem if the installed dependencies does not support your specifid GPU. This is very common in the case of `pytorch`, and in the case you have this problem, you might need to uninstall and install the specific versions with support for your GPU.
+2. There are dependencies that are GPU-dependent, and this might be a problem if the installed dependencies does not support your specific GPU. This is very common in the case of `pytorch`, and in the case you have this problem, you might need to uninstall and install the specific versions with support for your GPU.
