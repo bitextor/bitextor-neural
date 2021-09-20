@@ -74,9 +74,8 @@ ln -s "${WORK}/data/warc/clipped/greenpeaceaa.warc.gz" "${WORK}/data/warc/greenp
     ${BITEXTOR} ${FORCE} --notemp -j ${THREADS} \
         --config profiling=True permanentDir="${WORK}/permanent/bitextor-mt-output-en-fr" \
             dataDir="${WORK}/data/data-mt-en-fr" transientDir="${WORK}/transient-mt-en-fr" \
-            warcs="['${WORK}/data/warc/greenpeace.warc.gz']" preprocessor="warc2text" shards=1 batches=512 lang1=en lang2=fr \
-            documentAlignerThreshold="0.5" alignerCmd="bash ${DIR}/../bitextor/example/dummy-translate.sh" sentenceAligner="vecalign" \
-            bicleaner="${BICLEANER}/en-fr/metadata.yaml" tmx=True \
+            warcs="['${WORK}/data/warc/greenpeace.warc.gz']" shards=1 batches=512 lang1=en lang2=fr \
+            documentAlignerThreshold="0.5" bicleaner="${BICLEANER}/en-fr/metadata.yaml" tmx=True \
         &> "${WORK}/reports/10-mt-en-fr.report"
     annotate_and_echo_info 10 "$?" "$(get_nolines ${WORK}/permanent/bitextor-mt-output-en-fr/en-fr.sent.gz)"
 ) &
