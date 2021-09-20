@@ -70,8 +70,8 @@ jobs:
          env:
             WORK: ${{ github.workspace }}
          run: |
-            chmod 775 ./tests/run-tests-min.sh
-            ./tests/run-tests-min.sh -w "$WORK" -j 4
+            chmod 775 ./tests/run-tests.sh
+            ./tests/run-tests.sh -w "$WORK" -j 4
       -  name: Print log of tests which failed
          if: ${{ always() }}
          env:
