@@ -66,7 +66,7 @@ def process_nda_output(input_file, output_file, input_is_base64=False):
             raise Exception(f"unexpected NDA output format. Expected columns was 3|2, got {len(values)}")
 
         try:
-            src_idx, trg_idx = int(values[0]), int(values[1])
+            src_idx, trg_idx = int(values[0]) - 1, int(values[1]) - 1
 
             src_idxs.append(src_idx)
             trg_idxs.append(trg_idx)
