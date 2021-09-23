@@ -38,7 +38,7 @@ There are some optional parameters that allow for a finer control of the executi
 
 ```yaml
 until: preprocess
-parallelWorkers: {split: 2, docaling: 8, segaling: 8, bicleaner: 2}
+parallelWorkers: {split: 2, docalign: 8, segaling: 8, bicleaner: 2}
 profiling: true
 ```
 
@@ -170,12 +170,10 @@ embeddingsBatchSizeGPU: 2048
 After document alignment, the next step in the pipeline is segment alignment. This will be carried out by [Vecalign](https://github.com/bitextor/vecalign). Vecalign will use sentence-level embeddings and will apply different optimizations in order to apply an optimized edit distance and get the best matches of 1-many, many-1 and many-many sentences.
 
 ```yaml
-sentenceAligner: vecalign
 sentenceAlignerThreshold: 0.1
 embeddingsBatchSizeGPU: 2048
 ```
 
-* `sentenceAligner`: segment aligner tool, currently only `vecalign` is supported
 * `sentenceAlignerThreshold`: threshold for filtering pairs of sentences with a score too low, values in [0,1] range; default is 0.0
 
 ## Parallel data filtering
