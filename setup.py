@@ -49,7 +49,7 @@ if __name__ == "__main__":
         description="Bitextor generates translation memories from multilingual websites",
         long_description=long_description,
         long_description_content_type="text/markdown",
-        url="https://github.com/bitextor/bitextor",
+        url="https://github.com/bitextor/bitextor-neural",
         packages=["bitextor", "bitextor.utils"],
         #classifiers=[],
         #project_urls={},
