@@ -47,9 +47,9 @@ make -j install
 Optionally, it is possible to skip the compilation of the dependencies that are not expected to be used:
 
 ```bash
-cmake -DSKIP_BIROAMER=ON -DCMAKE_INSTALL_PREFIX=$HOME/.local .. # MGIZA is used for dictionary generation
-# other dependencies that can optionally be skipped:
-# WARC2TEXT, KENLM
+cmake -DSKIP_BIROAMER=ON -DCMAKE_INSTALL_PREFIX=$HOME/.local ..
+# dependencies that can optionally be skipped:
+# BIROAMER, WARC2TEXT, KENLM
 ```
 
 ### Golang packages
@@ -80,7 +80,7 @@ pip3 install .
 pip3 install ./bifixer
 pip3 install ./biroamer && python3 -m spacy download en_core_web_sm
 pip3 install ./neural-document-aligner
-pip3 install ./bicleaner-ai && pip install ./kenlm --install-option="--max_order 7"
+pip3 install ./bicleaner-ai && pip3 install ./kenlm --install-option="--max_order 7"
 ```
 
 If you don't want to install all Python requirements in `requirements.txt` because you don't expect to run some of Bitextor Neural modules, you can comment those `*.txt` in `requirements.txt` and rerun Bitextor Neural installation.
