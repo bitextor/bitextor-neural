@@ -38,8 +38,8 @@ if __name__ == "__main__":
     requirements = reqs_from_file("requirements.txt")
 
     setuptools.setup(
-        name="bitextor",
-        version="8.1.0",
+        name="bitextor-neural",
+        version="1.0",
         install_requires=requirements,
         license="GNU General Public License v3.0",
         #author=,
