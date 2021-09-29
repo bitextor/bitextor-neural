@@ -470,7 +470,7 @@ rule doc_emb_matches:
     output:
         f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_01.matches",
     params:
-        folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/nda",
+        folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{{src_batch}}_{{trg_batch}}/nda",
     threads: THREADS["docalign"]
     shell:
         """
@@ -527,7 +527,7 @@ rule vecalign:
                 | python3 "{WORKFLOW}/utils/print_alternatively_lines_cli.py" 2 | paste - - \
                 | {PROFILING} python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" \
                     "{params.vecalign_dir}" --tmp-dir "{params.folder}" --nda-input-is-base64 --threshold {SEGALIGN_THRESHOLD} \
-                    --embeddings-batch-size {EMBEDDINGS_BATCH_SIZE_GPU} \
+                    --embeddings-batch-size {EMBEDDINGS_BATCH_SIZE_GPU} --first-match-offset 1 \
                 | pigz -c > "{output}"
         """
 
