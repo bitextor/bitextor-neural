@@ -212,8 +212,8 @@ def print_alternatively_lines(input_file="-", blocks=2):
         if idx >= offset:
             break
 
-        print(lines[idx])
-        print(lines[idx + offset])
+        for i in range(blocks):
+            print(lines[idx + offset * i])
 
     if input_file == "-":
         input_fd.close()
