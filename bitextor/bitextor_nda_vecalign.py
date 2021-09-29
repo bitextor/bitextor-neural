@@ -43,7 +43,7 @@ def preprocess_file_content(content, return_list=False):
 
     return result
 
-def process_nda_output(input_file, output_file, input_is_base64=False):
+def process_nda_output(input_file, output_file, input_is_base64=False, first_match_offset=0):
     output = []
     src_sentences, trg_sentences = [], []
     src_urls, trg_urls = [], []
@@ -66,7 +66,7 @@ def process_nda_output(input_file, output_file, input_is_base64=False):
             raise Exception(f"unexpected NDA output format. Expected columns was 3|2, got {len(values)}")
 
         try:
-            src_idx, trg_idx = int(values[0]) - 1, int(values[1]) - 1
+            src_idx, trg_idx = int(values[0]) - first_match_offset, int(values[1]) - first_match_offset
 
             src_idxs.append(src_idx)
             trg_idxs.append(trg_idx)
@@ -211,6 +211,7 @@ def main(args):
     trg_overlapping = args.trg_overlapping
     src_embedding = args.src_embedding
     trg_embedding = args.trg_embedding
+    first_match_offset = args.first_match_offset
 
     if (nda_input_path == "-" and nda_output_path == "-"):
         raise Exception("you can only pipe either nda input or nda output, not both of them")
@@ -233,7 +234,8 @@ def main(args):
     check_vecalign_files(vecalign_dir)
 
     # Process output from NDA. Returned sentences are Base64 values where each Base64 entry is a document
-    src_sentences, trg_sentences, src_urls, trg_urls = process_nda_output(nda_input_path, nda_output_path, nda_input_is_base64)
+    src_sentences, trg_sentences, src_urls, trg_urls = process_nda_output(nda_input_path, nda_output_path, nda_input_is_base64,
+                                                                          first_match_offset=first_match_offset)
 
     if (len(src_sentences) != len(trg_sentences) or len(trg_sentences) != len(src_urls) or len(src_urls) != len(trg_urls)):
         raise Exception("unexpected lengths from [src, trg] sentences and [src, trg] URLs (all them should match): "
@@ -277,6 +279,8 @@ def parse_args():
                         help='Path to tmp directory')
     parser.add_argument('--nda-input-is-base64', action='store_true',
                         help='If the nda input file contains the first row with Base64 instead of paths to documents')
+    parser.add_argument('--first-match-offset', type=int, default=0,
+                        help='The matches are expected to begin with zero, but if they begin with other value, the offset can be set with this flag')
 
     # Vecalign specific options
     parser.add_argument('--vecalign-num-overlaps', type=int, default=4,
