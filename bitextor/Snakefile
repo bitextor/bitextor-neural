@@ -471,12 +471,15 @@ rule doc_emb_matches:
         f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_01.matches",
     params:
         folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{{src_batch}}_{{trg_batch}}/nda",
+        src_emb_name="emb.src",
+        trg_emb_name="emb.trg"
     threads: THREADS["docalign"]
     shell:
         """
         mkdir -p {params.folder}
         cat <(zcat {input.l1} | sed "s:$:	-	src:") <(zcat {input.l2} | sed "s:$:	-	trg:") | \
-            {PROFILING} neural-document-aligner - {params.folder}/emb_src {params.folder}/emb_trg \
+            {PROFILING} neural-document-aligner - {params.folder}/{params.src_emb_name} \
+                {params.folder}/{params.trg_emb_name} \
                 --docalign-strategy 'faiss' --weights-strategy 0 \
                 --merging-strategy 3 --results-strategy 0 \
                 --emb-optimization-strategy 2 --gen-emb-optimization-strategy 2 \
@@ -484,7 +487,6 @@ rule doc_emb_matches:
                 --threshold {DOC_THRESHOLD} --logging-level 30 \
                 --embeddings-batch-size {EMBEDDINGS_BATCH_SIZE_GPU} > {output}
         """
-
 
 ### SEGALIGN ####################################################
 rule aggregate_segalign:
@@ -511,6 +513,8 @@ rule vecalign:
         folder=f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/vecalign",
         workers=THREADS["segalign"],
         vecalign_dir=f"{WORKFLOW}/vecalign",
+        src_emb_storage=f"{rules.doc_emb_matches.params.folder}/{rules.doc_emb_matches.params.src_emb_name}",
+        trg_emb_storage=f"{rules.doc_emb_matches.params.folder}/{rules.doc_emb_matches.params.trg_emb_name}",
     output:
         f"{TRANSIENT}/{LANG1}_{LANG2}/{{shard}}/{LANG1}{{src_batch}}_{LANG2}{{trg_batch}}.06_02.segalign.gz",
     threads: max(THREADS["segalign"], 2)
@@ -528,9 +532,14 @@ rule vecalign:
                 | {PROFILING} python3 "{WORKFLOW}/bitextor_nda_vecalign.py" - "{input.indices}" \
                     "{params.vecalign_dir}" --tmp-dir "{params.folder}" --nda-input-is-base64 --threshold {SEGALIGN_THRESHOLD} \
                     --embeddings-batch-size {EMBEDDINGS_BATCH_SIZE_GPU} --first-match-offset 1 \
+                    --embedding-src-storage-input "{input.plain1}" --embedding-src-storage-input-base64 \
+                    --embedding-src-storage-path "{params.src_emb_storage}" --embedding-trg-storage-input "{input.plain2}" \
+                    --embedding-trg-storage-input-base64 --embedding-trg-storage-path "{params.trg_emb_storage}" \
+                    --src-embeddings-optimization-strategy 2 --trg-embeddings-optimization-strategy 2 \
+                    --src-storage-embeddings-optimization-strategy 2 --trg-storage-embeddings-optimization-strategy 2 \
+                    --embedding-src-storage-not-uniq --embedding-trg-storage-not-uniq \
                 | pigz -c > "{output}"
         """
-
 
 ### FILTERING AND CLEANING ######################################
 

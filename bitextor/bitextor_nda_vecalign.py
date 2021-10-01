@@ -20,6 +20,7 @@
 import os
 import sys
 import base64
+import logging
 import argparse
 import subprocess
 
@@ -247,13 +248,42 @@ def main(args):
 
     # Execute vecalign (it will generate the embeddings and/or overlapping files if they do not exist)
     threshold = ["--threshold", str(args.threshold)] if args.threshold is not None else []
+    storage_flags = []
+
+    # Generate storage flags
+    if (args.embedding_src_storage_input is not None and args.embedding_src_storage_path is not None):
+        storage_flags.extend(["--embeddings_src_storage_input", args.embedding_src_storage_input,
+                              "--embeddings_src_storage_path", args.embedding_src_storage_path])
+
+        if args.embedding_src_storage_input_base64:
+            storage_flags.append("--embeddings_src_storage_input_base64")
+
+        logging.info("using embeddings storage (src)")
+    if (args.embedding_trg_storage_input is not None and args.embedding_trg_storage_path is not None):
+        storage_flags.extend(["--embeddings_tgt_storage_input", args.embedding_trg_storage_input,
+                              "--embeddings_tgt_storage_path", args.embedding_trg_storage_path])
+
+        if args.embedding_trg_storage_input_base64:
+            storage_flags.append("--embeddings_tgt_storage_input_base64")
+
+        logging.info("using embeddings storage (trg)")
+
+    if args.embedding_src_storage_not_uniq:
+        storage_flags.append("--embeddings_src_storage_are_not_uniq")
+    if args.embedding_trg_storage_not_uniq:
+        storage_flags.append("--embeddings_tgt_storage_are_not_uniq")
+
+    storage_flags.extend(["--src_embeddings_optimization_strategy", str(args.src_embeddings_optimization_strategy),
+                          "--tgt_embeddings_optimization_strategy", str(args.trg_embeddings_optimization_strategy),
+                          "--src_storage_embeddings_optimization_strategy", str(args.src_storage_embeddings_optimization_strategy),
+                          "--tgt_storage_embeddings_optimization_strategy", str(args.trg_storage_embeddings_optimization_strategy)])
 
     result = subprocess.Popen([f"{vecalign_dir}/vecalign.py", "--alignment_max_size", str(alignment_max_size),
                                "--src", "-", "--tgt", "-", "--src_urls", "-", "--tgt_urls", "-",
                                "--src_embed", vecalign_overlaps_src_path, vecalign_overlaps_src_embeddings_path,
                                "--tgt_embed", vecalign_overlaps_trg_path, vecalign_overlaps_trg_embeddings_path,
                                *threshold, "--embeddings_dim", str(dim), "--urls_format",
-                               "--embeddings_batch_size", str(embeddings_batch_size)],
+                               "--embeddings_batch_size", str(embeddings_batch_size), *storage_flags],
                                stdin=subprocess.PIPE, stdout=None, stderr=None)
 
     # Pipe input and get output
@@ -266,7 +296,6 @@ def main(args):
 def parse_args():
     parser = argparse.ArgumentParser(description='NDA output process for Vecalign')
 
-    # Embedding
     parser.add_argument('nda_input_path', metavar='nda-input-path',
                         help='Path to the input file of NDA. \'-\' for reading from stdin')
     parser.add_argument('nda_output_path', metavar='nda-output-path',
@@ -281,6 +310,34 @@ def parse_args():
                         help='If the nda input file contains the first row with Base64 instead of paths to documents')
     parser.add_argument('--first-match-offset', type=int, default=0,
                         help='The matches are expected to begin with zero, but if they begin with other value, the offset can be set with this flag')
+    ## Storage
+    parser.add_argument('--embedding-src-storage-input', type=str,
+                        help='Path to the src storage file which contains sentences. You will need to provide --embedding-src-storage-path as well')
+    parser.add_argument('--embedding-src-storage-input-base64', action='store_true',
+                        help='Sentences provided via --embedding-src-storage-input are base64 encoded')
+    parser.add_argument('--embedding-src-storage-path', type=str,
+                        help='Path to the src storage file which contains embeddings. You will need to provide --embedding-src-storage-input as well')
+    parser.add_argument('--embedding-trg-storage-input', type=str,
+                        help='Path to the trg storage file which contains sentences. You will need to provide --embedding-trg-storage-path as well')
+    parser.add_argument('--embedding-trg-storage-input-base64', action='store_true',
+                        help='Sentences provided via --embedding-trg-storage-input are base64 encoded')
+    parser.add_argument('--embedding-trg-storage-path', type=str,
+                        help='Path to the trg storage file which contains embeddings. You will need to provide --embedding-trg-storage-input as well')
+    parser.add_argument('--embedding-src-storage-not-uniq', action='store_true',
+                        help='Expected src storage embeddings are monotonic and unique (i.e. embeddings from previous sentences are not expected to be provided). If the provided embeddings are 1-1 with the sentences, this flag must be set')
+    parser.add_argument('--embedding-trg-storage-not-uniq', action='store_true',
+                        help='Expected trg storage embeddings are monotonic and unique (i.e. embeddings from previous sentences are not expected to be provided). If the provided embeddings are 1-1 with the sentences, this flag must be set')
+    ## Optimization
+    parser.add_argument('--src-embeddings-optimization-strategy', type=int, default=0, choices=[0, 1, 2],
+                        help='Optimization strategy applied to the embeddings when being generated. The generated embeddings will be stored applying the same strategy')
+    parser.add_argument('--trg-embeddings-optimization-strategy', type=int, default=0, choices=[0, 1, 2],
+                        help='Optimization strategy applied to the embeddings when being generated. The generated embeddings will be stored applying the same strategy')
+    parser.add_argument('--src-storage-embeddings-optimization-strategy', type=int, default=0, choices=[0, 1, 2],
+                        help='Optimization strategy applied to the storage embeddings when being loaded')
+    parser.add_argument('--trg-storage-embeddings-optimization-strategy', type=int, default=0, choices=[0, 1, 2],
+                        help='Optimization strategy applied to the storage embeddings when being loaded')
+
+
 
     # Vecalign specific options
     parser.add_argument('--vecalign-num-overlaps', type=int, default=4,
