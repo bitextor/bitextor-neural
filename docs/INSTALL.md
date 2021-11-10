@@ -58,7 +58,7 @@ Additionally, Bitextor Neural uses [giashard](https://github.com/paracrawl/giash
 
 ```bash
 # build and place the necessary tools in $HOME/go/bin
-go get github.com/paracrawl/giashard/...
+go install github.com/paracrawl/giashard/...@latest
 ```
 
 ### Pip dependencies
