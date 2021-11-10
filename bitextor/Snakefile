@@ -65,8 +65,48 @@ PPROC = "warc2text"
 PPROC_FILES = ["text.gz", "url.gz", "mime.gz"]
 TEXT_FILE = "text.gz"
 
+if "preprocessor" in config:
+    if config["preprocessor"] == "warc2preprocess":
+        PPROC = "w2p"
+        PPROC_FILES = ["plain_text.gz", "url.gz", "mime.gz", "normalized_html.gz", "deboilerplate_html.gz"]
+        TEXT_FILE = "plain_text.gz"
+    else:
+        PPROC = config["preprocessor"]
+
 SHARDS = config["shards"]
 BATCHES = config["batches"]
+
+BOILERPLATE_CLEANING = config["boilerplateCleaning"]
+PARAGRAPH_IDENTIFICATION = False # TODO configuration
+
+CLEANHTML = ""
+FTFY = ""
+LANGID = "cld2"
+PARSER = ""
+PDFEXTRACT = ""
+HTML5LIB = ""
+
+if "cleanHTML" in config and config["cleanHTML"]:
+    CLEANHTML = "--cleanhtml"
+if "ftfy" in config and config["ftfy"]:
+    FTFY = "--ftfy"
+if "langID" in config:
+    LANGID = config["langID"]
+if "parser" in config:
+    PARSER = f"--parser {config['parser']}"
+if "PDFextract" in config and config["PDFextract"]:
+    PDFEXTRACT_CF = ""
+    PDFEXTRACT_SJ = ""
+    PDFEXTRACT_KL = ""
+    if "PDFextract_configfile" in config and config["PDFextract_configfile"]:
+        PDFEXTRACT_CF = f" --pe_configfile {config['PDFextract_configfile']}"
+    if "PDFextract_sentence_join_path" in config and config["PDFextract_sentence_join_path"]:
+        PDFEXTRACT_SJ = f" --sentence_join_path {config['PDFextract_sentence_join_path']}"
+    if "PDFextract_kenlm_path" in config and config["PDFextract_kenlm_path"]:
+        PDFEXTRACT_KL = f" --kenlm_path {config['PDFextract_kenlm_path']}"
+    PDFEXTRACT = f"--pdfextract {PDFEXTRACT_CF} {PDFEXTRACT_SJ} {PDFEXTRACT_KL}"
+if "html5lib" in config and config["html5lib"]:
+    HTML5LIB = "--html5lib"
 
 # sentence splitting and tokenisation
 SENTTOKS = {} if not "sentenceSplitters" in config else config["sentenceSplitters"]
@@ -308,6 +348,38 @@ def get_warcs_names(wildcards):
 def get_pproc_input(wildcards):
     return TARGET_2_WARCS[wildcards.target]
 
+rule warc2preprocess:
+    """
+    Process a list of WARCs (or a single WARC)
+        and produce {plain_text,mime,url,normalized_html,deboilerplate_html}.gz
+    """
+    input:
+        get_pproc_input,
+    output:
+        expand("{data}/preprocess/{{target}}/w2p/{lang}/{pproc_file}", data=DATADIR, lang=LANGS, pproc_file=PPROC_FILES),
+    threads: 2
+    params:
+        folder=lambda wildcards, output: os.path.dirname(os.path.dirname(output[0])),  # remove "{lang}/{pproc_file}"
+        pproclangs=",".join(LANGS),
+        boilerplate='--boilerpipe' if BOILERPLATE_CLEANING else '',
+    shell:
+        """
+        mkdir -p {params.folder}
+        cat {input} \
+            | {PROFILING} python3 {WORKFLOW}/bitextor_warc2htmlwarc.py {CLEANHTML} {FTFY} {PDFEXTRACT} --disable-output-gzip \
+            | {PROFILING} python3 {WORKFLOW}/bitextor_warc2preprocess.py --input - --langs {params.pproclangs} \
+                --compression gz --langid {LANGID} {params.boilerplate} {HTML5LIB} {PARSER} --output-dir {params.folder}
+        for lang in {LANGS}; do
+            if [ ! -f {params.folder}/$lang/plain_text.gz ]; then
+                >&2 echo "WARNING: no \'$lang\' data found in {wildcards.target}: creating empty files instead"
+                mkdir -p {params.folder}/$lang
+                touch {params.folder}/$lang/{{plain_text,mime,url,normalized_html,deboilerplate_html}}
+                gzip {params.folder}/$lang/{{plain_text,mime,url,normalized_html,deboilerplate_html}}
+                # Generate empty file in order to be able to check if is needed to generate empty shards later
+                touch "{EMPTY_SHARD_CHECK}_$lang"
+            fi
+        done
+        """
 
 rule warc2text:
     input:

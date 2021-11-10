@@ -76,11 +76,33 @@ def validate_args(config):
         'crawlWait': {'type': 'string'},
         'crawlFileTypes': {'type': 'string'},
         # preprocessing
+        'preprocessor': {'type': 'string', 'allowed': ['warc2text', 'warc2preprocess'], 'default': 'warc2text'},
         'langs': {'type': 'list'},
         'shards': {'type': 'integer', 'min': 0, 'default': 8},
         'batches': {'type': 'integer', 'min': 1, 'default': 1024},
         # specific to warc2text:
-        'writeHTML': {'type': 'boolean'},
+        'writeHTML': {'type': 'boolean', 'dependencies': {'preprocessor': ['warc2text']}},
+        # specific to warc2preprocess:
+        'cleanHTML': {'type': 'boolean', 'dependencies': {'preprocessor': 'warc2preprocess'}},
+        'ftfy': {'type': 'boolean', 'dependencies': {'preprocessor': 'warc2preprocess'}},
+        'langID': {
+            'type': 'string',
+            'allowed': ['cld2', 'cld3'],
+            'dependencies': {'preprocessor': 'warc2preprocess'}
+        },
+        'parser': {
+            'type': 'string',
+            'allowed': ['bs4', 'modest', 'simple', 'lxml'],
+            'dependencies': {'preprocessor': 'warc2preprocess'}
+        },
+        'html5lib': {'type': 'boolean', 'dependencies': {'preprocessor': 'warc2preprocess'}},
+        # pdfEXTRACT
+        'PDFextract': {'type': 'boolean', 'dependencies': {'preprocessor': 'warc2preprocess'}},
+        'PDFextract_configfile': {'type': 'string', 'dependencies': 'PDFextract'},
+        'PDFextract_sentence_join_path': {'type': 'string', 'dependencies': 'PDFextract'},
+        'PDFextract_kenlm_path': {'type': 'string', 'dependencies': 'PDFextract'},
+        # boilerplate (prevertical2text, i.e. preverticals, and warc2preprocess)
+        'boilerplateCleaning': {'type': 'boolean', 'default': False},
         # tokenization
         'sentenceSplitters': {'type': 'dict'},
         'customNBPs': {'type': 'dict'},
