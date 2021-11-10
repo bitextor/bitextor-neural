@@ -42,6 +42,12 @@ jobs:
             pip3 install --upgrade pip
             sudo apt-get --assume-yes install python3-venv python3-setuptools
             pip3 install Cython
+      -  name: Set up JDK
+         uses: actions/setup-java@v1
+         with:
+            java-version: 8
+            java-package: jdk
+            architecture: x64
       -  uses: actions/checkout@v2
       -  name: Checkout submodules
          run: git submodule update --init --force --recursive
@@ -61,7 +67,7 @@ jobs:
             go get github.com/paracrawl/giashard/...
       -  name: Compiling bitextor and submodules
          run: |
-            mkdir build && cd build
+            mkdir build_cmake && cd build_cmake
             cmake -DSKIP_MGIZA=ON -DCMAKE_INSTALL_PREFIX=/usr ..
             make -j
             sudo make install
