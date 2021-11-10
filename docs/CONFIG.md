@@ -101,8 +101,26 @@ shards: 8 # 2^8 shards
 batches: 1024 # batches of up to 1024MB
 ```
 
-* `preprocessor`: this options allows to select the text extraction tool. Currently, only `warc2text` is supported.
+* `preprocessor`: this options allows to select one of two text extraction tools, `warc2text` (default) or `warc2preprocess`. `warc2text` is faster but less flexibile (less options) than `warc2preprocess`. There is another preprocessor, but cannot be set, and that is `prevertical2text`. This preprocessor will be used automatically when you have prevertical files, which is the format of the SpiderLing crawler. The reason why cannot be set is because is not a generic preprocessor, but specific for SpiderLing files.
 * `langs`: list of languages that will be processed in addition to `lang1` and `lang2`.
+
+Options specific to `warc2preprocess`:
+
+* `langID`: the model that should be used for language identification, [`cld2`](https://github.com/CLD2Owners/cld2) (default) or [`cld3`](https://github.com/google/cld3); `cld2` is faster, but `cld3` can be more accurate for certain languages
+* `ftfy`: ftfy is a tool that solves encoding errors (disabled by default)
+* `cleanHTML`: attempt to remove some parts of HTML that don't contain text (such as CSS, embedded scripts or special tags) before running ftfy, which is a quite slow, in order to improve overall speed; this has an unwanted side effect of removing too much content if the HTML document is malformed (disabled by default)
+* `html5lib`: extra parsing with [`html5lib`](https://pypi.org/project/html5lib/), which is slow but the cleanest option and parses the HTML the same way as the modern browsers, which is interesting for broken HTMLs (disabled by default)
+* `boilerplateCleaning`: enable [boilerpipe](https://boilerpipe-web.appspot.com/) to remove boilerplates from HTML documents (disabled by default)
+* `parser`: select HTML parsing library for text extraction; options are: [`bs4`](https://www.crummy.com/software/BeautifulSoup/bs4/doc/) (default), [`modest`](https://github.com/rushter/selectolax), `lxml` (uses `html5lib`) or `simple` (very basic HTML tokenizer)
+* `PDFextract`: use [PDFExtraxt](https://github.com/bitextor/python-pdfextract) instead of poppler `pdf2html` converter
+* `PDFextract_configfile`: set a path for a PDFExtract config file, specially for language models for a better sentence splitting (see [more info](https://github.com/bitextor/pdf-extract/#pdfextractjson))
+* `PDFextract_sentence_join_path`: set a path for sentence-join.py script, otherwise, the one included with bitextor will be used
+* `PDFextract_kenlm_path`: set path for kenlm binaries
+<!-- * `plainTextHashes`: file with plain text MurmurHashes from a previous Bitextor run, so only hashes that are not found in this file are processed in Bitextor. This is useful in case you want to fully recrawl a domain but only process updated content. Works with `bitextor-warc2preprocess` -->
+
+Boilerplate:
+
+* `boilerplateCleaning`: if `preprocessor: warc2preprocess`, enables [boilerpipe](https://boilerpipe-web.appspot.com/) to remove boilerplates from HTML documents. If you have provided `preverticals` files, it will discard those entries detected as boilerplate by `prevertical2text` automatically. `warc2text` does not support this option. It is disabled by default
 
 Sharding options:
 
