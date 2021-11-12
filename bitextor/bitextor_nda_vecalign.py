@@ -192,8 +192,7 @@ def vecalign_overlap(vecalign_dir, base64_input_list, overlaps_output_path, num_
     result.communicate(input=("\n".join(base64_input_list)).encode("utf-8"))
 
     if result.returncode != 0:
-        raise Exception(f"something went wrong while generating the overlapping files for Vecalign: return code is {result.returncode}"
-                        f"{' (stderr: ' + str(stderr) + ')' if len(stderr) != 0 else ''}")
+        raise Exception(f"something went wrong while generating the overlapping files for Vecalign: return code is {result.returncode}")
 
     if not os.path.isfile(overlaps_output_path):
         raise Exception(f"overlap file {overlaps_output_path} should exist, but it does not exist")
