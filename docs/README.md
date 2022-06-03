@@ -1,3 +1,6 @@
+# Warning
+Be aware that this repository, Bitextor Neural, has been **archived** and now is **read-only**. Features from this tool are now integrated into [Bitextor](https://github.com/bitextor/bitextor), and new features and fixes will not be ported to this repository from Bitextor.
+
 # ![Bitextor](img/banner.png)
 
 ![License](https://img.shields.io/badge/License-GPLv3-blue.svg)
